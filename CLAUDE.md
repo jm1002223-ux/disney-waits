@@ -7,7 +7,7 @@
 - 先にやることを1文で言ってから作業し、終わったら結果を短く報告する。手順の実況はいらない
 - 分析期間(〜12/26)は **このリポジトリの技術スタックを変えない**(ユーザーの決定)。新しいライブラリやサービスを足す前に確認する
 - `data/` の中身は手で編集しない(GitHub Actionsが追記するため、編集すると `git pull` が衝突する)
-- トークンやキーをファイルやコミットに書かない。GitHubの操作は `gh`(`gh auth login` 済み)で行う
+- トークンやキーをファイルやコミットに書かない。`gh` は入っているが**未ログイン**(`C:\Program Files\GitHub CLI\gh.exe`)。push は git(資格情報は保存済み)で行う。ブラウザでのGitHub操作(設定・手動実行)はユーザーが自分でやる方が速いと言っている
 
 ## 目的
 カリフォルニアのディズニーランド・リゾート2パーク(ディズニーランド・パーク=DL、カリフォルニア・アドベンチャー=DCA)の待ち時間を5分おきに集め、12/26(土)までに、旅行当日に使う「最適な回り方」を、実データと精度の裏付け付きで作る。個人の研究。公開はしない(将来、英語で発表する可能性はある)。
@@ -17,10 +17,12 @@
 - 旅行の日付と、各パークに行く日:**未確定**(決まったら `plan_*.json` の `date` と `crowd_index` に入れる)
 
 ## 現在の状況(2026-11-23時点)
-- コードは一式できていて、ダミーデータでは全スクリプトの動作を確認済み
-- **未実施**:GitHubの公開リポジトリ `disney-waits` の作成、push、Actionsの書き込み権限の設定、手動実行での確認
-- **未確認**:Queue-Times の本物のデータ取得(開発環境から接続できなかった)。最初の本番実行のログで、CSVの列と中身を必ず確かめる
-- データ取得の開始予定:2026-11-24(現地)。日本時間では 11/25 0時ごろから
+- **セットアップ完了**:公開リポジトリ https://github.com/jm1002223-ux/disney-waits (`main`)にpush済み。Actionsの書き込み権限を設定し、手動実行(2026-11-23 13:24 UTC)は成功
+- **本物のデータ取得を確認済み**:`data/DCA/2026-11-23.csv`(31行)。列は想定どおりの7列で、カンマを含む名前(`Monsters, Inc. …`)も正しく入る。この1回は閉園中に保存された(下記の判定変更の前)。行はすべて休止扱いで、分析への影響はない。`data/` なので消さない
+- **collect.py の営業判定を変更**(2026-11-23):夜間もWorld of Colorなどのショーが `is_open` になり、DCAの閉園を判定できなかった。判定は `rides.json` に載っているアトラクションだけで行う。閉園直後の1回だけ記録する(`park just closed, write once`)。ローカルで5つの場面と本物のデータで確認済み
+- Queue-Timesの一覧には `rides.json` にない項目がある(DCA:シングルライダーの列4つ、World of Color、Pixar Pal-A-Round – Non-Swinging)。月曜の作業で対応表を見直す
+- 定期実行:現地 11/23 7時(日本時間 11/24 0時)から開始
+- PCの分析環境:仮想環境 `C:\Users\user\venvs\disney-waits`(`requirements.txt` と `tzdata` を導入済み)。Windowsストア版Pythonのままだと、JupyterLabのインストールがパスの長さの上限で失敗するため。使う前に `C:\Users\user\venvs\disney-waits\Scripts\Activate.ps1`
 
 ## 技術スタック
 | 役割 | 使うもの |
@@ -40,7 +42,7 @@
 | ファイル | 役割 |
 | --- | --- |
 | `.github/workflows/collect.yml` | cron `*/5 0-8,15-23 * * *`(UTC)= 現地7時〜24時ごろ。`collect.py` を実行して `data/` をコミット。`workflow_dispatch` で手動実行可。`permissions: contents: write` |
-| `collect.py` | 両パークを取得し、`data/<park>/<現地日付>.csv` に追記。列:`fetched_utc, ride_id, ride_name, land, is_open, wait_time, last_updated`。全部閉まっている、または更新がないときはスキップ(ログ `park closed, skip`) |
+| `collect.py` | 両パークを取得し、`data/<park>/<現地日付>.csv` に追記。列:`fetched_utc, ride_id, ride_name, land, is_open, wait_time, last_updated`。営業判定は `rides.json` のアトラクションだけで行う(ショー・シングルライダーの列は数えない)。全部閉まっていればスキップ(ログ `park closed, skip`)。閉園直後は1回だけ記録。更新がなければスキップ(`no update since last fetch`)。ログの1行目は `アトラクション営業中 n/全体` |
 | `analyze.py` | 15分ごとの中央値・90%点 → `profiles/`。`--park`、`--from/--to`、`--days all/weekday/weekend` |
 | `model.py` | 混雑指数(人気アトラクションの日平均÷期間平均×100)、予測モデル(日平均 = a + b×混雑指数、×時間帯の形)、ゲスト占有率(リトルの法則)、レポートHTML → `models/`。`--backtest` で1日ずつ抜いて精度検証 |
 | `insights.py` | クラスタリング(k-means++、シルエットでk決定、ブートストラップARI)、朝いちばんの価値ランキング、シス調(営業中の停止)の確率と時間帯 → `insights/`。`--boot`、`--seed` |
