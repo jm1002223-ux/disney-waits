@@ -1,0 +1,73 @@
+{
+  "park": "DCA",
+  "entry": "08:00",
+  "exit": "22:00",
+  "crowd_index": null,
+  "wait_model": "median",
+  "date": "2026-12-20",
+  "weather": "",
+  "event": "",
+  "profile": "profiles/DCA.json",
+  "multi_pass": [
+    6,
+    7,
+    8,
+    13,
+    15,
+    20,
+    24,
+    26,
+    27
+  ],
+  "single_pass": [
+    11
+  ],
+  "standby": [
+    2,
+    3,
+    4,
+    5,
+    9,
+    10,
+    17,
+    18,
+    19
+  ],
+  "allow_standby_fallback": true,
+  "priority": {
+    "11": 5
+  },
+  "shows": [
+    {
+      "name": "ワールド・オブ・カラー シーズン・オブ・ライト",
+      "start": "21:00",
+      "end": "21:30",
+      "arrive_before": 30,
+      "near": 24,
+      "priority": 4
+    }
+  ],
+  "meals": [
+    {
+      "name": "昼食",
+      "from": "11:00",
+      "to": "14:00",
+      "minutes": 40
+    },
+    {
+      "name": "夕食",
+      "from": "17:00",
+      "to": "20:00",
+      "minutes": 40
+    }
+  ],
+  "ll_delay_high": [
+    60,
+    0.25
+  ],
+  "ll_delay_mid": [
+    30,
+    0.1
+  ],
+  "iterations": 150000
+}
