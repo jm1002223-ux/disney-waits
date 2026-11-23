@@ -8,7 +8,7 @@ Powered by [Queue-Times.com](https://queue-times.com/)(待ち時間データの�
 
 | ファイル | 役割 |
 |---|---|
-| `.github/workflows/collect.yml` | 5分おき(現地7時〜24時ごろ)に `collect.py` を動かし、データをコミットする |
+| `.github/workflows/collect-waits.yml` | 10分おき(終日。閉園中は保存しない)に `collect.py` を動かし、データをコミットする |
 | `collect.py` | 待ち時間を取得して `data/DL/日付.csv`・`data/DCA/日付.csv` に追記(現地時間で日付を分ける) |
 | `analyze.py` | 貯めたデータから、アトラクションごと・15分ごとの待ち時間(中央値)を集計 |
 | `model.py` | 混雑指数を計算し、指数ごとの待ち時間と列の人数(推定)を出す。グラフ付きレポートも作る |
@@ -25,7 +25,7 @@ Powered by [Queue-Times.com](https://queue-times.com/)(待ち時間データの�
 
 1. GitHubで新しいリポジトリを作る。**Public(公開)にしてください**
    - 公開リポジトリならActionsは無料で回し放題です。集めるのは公開されている待ち時間だけなので、公開して困る情報は入りません
-   - 非公開だと無料枠が月2000分で、5分おきだと大きく超えます(非公開にするなら `collect.yml` の `*/5` を `*/30` に)
+   - 非公開だと無料枠が月2000分で、5分おきだと大きく超えます(非公開にするなら `collect-waits.yml` の cron を30分おき に)
 2. このフォルダの中身を全部アップロードする(`.github` フォルダも忘れずに)
 3. リポジトリの **Settings → Actions → General → Workflow permissions** を **Read and write permissions** にして保存する
 4. **Actions** タブ → `collect-wait-times` → **Run workflow** で1回手動実行して、`data/` にCSVができるか確認する

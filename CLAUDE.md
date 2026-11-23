@@ -30,7 +30,7 @@
 | 役割 | 使うもの |
 | --- | --- |
 | データ元 | Queue-Times.com 公開API `https://queue-times.com/parks/{id}/queue_times.json`(DL=16, DCA=17)。キー不要、約5分ごとに更新、現在値のみ |
-| 定期実行 | GitHub Actions(`.github/workflows/collect.yml`、公開リポジトリなので無料) |
+| 定期実行 | GitHub Actions(`.github/workflows/collect-waits.yml`、公開リポジトリなので無料) |
 | 言語 | Python 3.12(3.10以上で動く) |
 | 生データ | CSV:`data/<DL|DCA>/<現地の日付>.csv` |
 | 分析用DB | DuckDB と Parquet(`warehouse/`、パーク・月で分割。git管理外) |
@@ -45,7 +45,7 @@
 ## ファイルの役割
 | ファイル | 役割 |
 | --- | --- |
-| `.github/workflows/collect.yml` | cron `*/5 0-8,15-23 * * *`(UTC)= 現地7時〜24時ごろ。`collect.py` を実行して `data/` をコミット。`workflow_dispatch` で手動実行可。`permissions: contents: write` |
+| `.github/workflows/collect-waits.yml` | cron `4-59/10 * * * *`(UTC、終日10分おき。閉園中は collect.py が保存しない)。`collect.py` を実行して `data/` をコミット。`workflow_dispatch` で手動実行可。`permissions: contents: write` |
 | `collect.py` | 両パークを取得し、`data/<park>/<現地日付>.csv` に追記。列:`fetched_utc, ride_id, ride_name, land, is_open, wait_time, last_updated`。営業判定は `rides.json` のアトラクションだけで行う(ショー・シングルライダーの列は数えない)。全部閉まっていればスキップ(ログ `park closed, skip`)。閉園直後は1回だけ記録。更新がなければスキップ(`no update since last fetch`)。ログの1行目は `アトラクション営業中 n/全体` |
 | (追加の出力) | ダッシュボード用の要約JSON:`model.py --backtest` → `models/<park>_backtest_summary.json`、`insights.py` → `insights/<park>_summary.json`(シルエット・ARI・時間帯別のシス調を含む)、`plan.py` → `plan_<park>_result.json`(**`plan_<park>.json` は入力の設定なので別名**)。計算方法は変えていない |
 | `analyze.py` | 15分ごとの中央値・90%点 → `profiles/`。`--park`、`--from/--to`、`--days all/weekday/weekend` |
