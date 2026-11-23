@@ -22,8 +22,8 @@
 - **本物のデータ取得を確認済み**:`data/DCA/2026-11-23.csv`(31行)。列は想定どおりの7列で、カンマを含む名前(`Monsters, Inc. …`)も正しく入る。この1回は閉園中に保存された(下記の判定変更の前)。行はすべて休止扱いで、分析への影響はない。`data/` なので消さない
 - **collect.py の営業判定を変更**(2026-11-23):夜間もWorld of Colorなどのショーが `is_open` になり、DCAの閉園を判定できなかった。判定は `rides.json` に載っているアトラクションだけで行う。閉園直後の1回だけ記録する(`park just closed, write once`)。ローカルで5つの場面と本物のデータで確認済み
 - Queue-Timesの一覧には `rides.json` にない項目がある(DCA:シングルライダーの列4つ、World of Color、Pixar Pal-A-Round – Non-Swinging)。月曜の作業で対応表を見直す
-- **定期実行(schedule)が一度も起動しない(2026-11-23 15:00〜20:10 UTC、未解決)**:手動実行は成功、ワークフローは active、GitHubの障害なし。試したこと:actions更新、cron `2-59/5 0-8,15-23`、cron `4-59/10 * * * *`(終日10分おき、現在の設定)、ファイル名を `collect-waits.yml` に変更して再登録。いずれも起動せず。新しいアカウント・リポジトリで定期実行が遅れる/止められる例がある
-  - **代行中**:PCで `scratchpad/local_collect.sh`(5分おきに collect.py → git push、コミット名 `data: … (local)`)を実行。GitHubの定期実行が1回でも出たら自動で止まる。PCがスリープすると止まる。Windowsでは `PYTHONIOENCODING=utf-8` が必要(cp932で名前の `–` が出力できず落ちる)
+- **GitHubの定期実行(schedule)はこのアカウントで起動しない**(2026-11-23 15:00〜22:20 UTC、cronの書き方・ファイル名の変更でも0回。このアカウントで定期実行が動いたことは一度もない)。**2026-11-23 22:24 UTC から「自分で次の回を予約する方式」に変更して稼働中**(下の `collect-waits.yml` の行)。PCでの代行(`local_collect.sh`)は停止済み
+  - 毎日の確認:Actions に `in_progress` 1つと `pending` 1つがあること、`data/` に `wait-time-bot` のコミットが5分おきに入っていること。鎖が切れたら(両方ない)Actionsの画面で手動実行すれば再開する。Windowsで collect.py を動かすときは `PYTHONIOENCODING=utf-8` が必要
 - PCの分析環境:仮想環境 `C:\Users\user\venvs\disney-waits`(`requirements.txt` と `tzdata` を導入済み)。Windowsストア版Pythonのままだと、JupyterLabのインストールがパスの長さの上限で失敗するため。使う前に `C:\Users\user\venvs\disney-waits\Scripts\Activate.ps1`
 
 ## 技術スタック
@@ -45,7 +45,7 @@
 ## ファイルの役割
 | ファイル | 役割 |
 | --- | --- |
-| `.github/workflows/collect-waits.yml` | cron `4-59/10 * * * *`(UTC、終日10分おき。閉園中は collect.py が保存しない)。`collect.py` を実行して `data/` をコミット。`workflow_dispatch` で手動実行可。`permissions: contents: write` |
+| `.github/workflows/collect-waits.yml` | 1回の実行で約5時間50分、5分おきに `collect.py` を実行して `data/` をコミット。開始直後に `gh workflow run` で次の回を予約(`concurrency` で前の回が終わるまで待機)。起動は手動実行か、このファイルの変更のpush。`permissions: contents: write, actions: write`。止めるときは「Disable workflow」 |
 | `collect.py` | 両パークを取得し、`data/<park>/<現地日付>.csv` に追記。列:`fetched_utc, ride_id, ride_name, land, is_open, wait_time, last_updated`。営業判定は `rides.json` のアトラクションだけで行う(ショー・シングルライダーの列は数えない)。全部閉まっていればスキップ(ログ `park closed, skip`)。閉園直後は1回だけ記録。更新がなければスキップ(`no update since last fetch`)。ログの1行目は `アトラクション営業中 n/全体` |
 | (追加の出力) | ダッシュボード用の要約JSON:`model.py --backtest` → `models/<park>_backtest_summary.json`、`insights.py` → `insights/<park>_summary.json`(シルエット・ARI・時間帯別のシス調を含む)、`plan.py` → `plan_<park>_result.json`(**`plan_<park>.json` は入力の設定なので別名**)。計算方法は変えていない |
 | `analyze.py` | 15分ごとの中央値・90%点 → `profiles/`。`--park`、`--from/--to`、`--days all/weekday/weekend` |

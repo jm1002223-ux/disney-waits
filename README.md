@@ -8,7 +8,7 @@ Powered by [Queue-Times.com](https://queue-times.com/)(待ち時間データの�
 
 | ファイル | 役割 |
 |---|---|
-| `.github/workflows/collect-waits.yml` | 10分おき(終日。閉園中は保存しない)に `collect.py` を動かし、データをコミットする |
+| `.github/workflows/collect-waits.yml` | 5分おき(終日。1回の実行が約6時間動き、次の回を自分で予約する。閉園中は保存しない)に `collect.py` を動かし、データをコミットする |
 | `collect.py` | 待ち時間を取得して `data/DL/日付.csv`・`data/DCA/日付.csv` に追記(現地時間で日付を分ける) |
 | `analyze.py` | 貯めたデータから、アトラクションごと・15分ごとの待ち時間(中央値)を集計 |
 | `model.py` | 混雑指数を計算し、指数ごとの待ち時間と列の人数(推定)を出す。グラフ付きレポートも作る |
