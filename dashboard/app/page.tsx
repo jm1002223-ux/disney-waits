@@ -4,9 +4,12 @@ import { AppShell } from './components/AppShell'
 import { Dashboard } from './components/Dashboard'
 import type { ParkData } from './lib/types'
 
+// DASHBOARD_DATA_DIR を指定すると、そこにある集計(ダミーなど)を読む。画面にはサンプル表示の帯を出す
+const SAMPLE_DIR = process.env.DASHBOARD_DATA_DIR
+
 async function load(park: string): Promise<ParkData | null> {
   try {
-    const raw = await readFile(path.join(process.cwd(), 'data', `${park}.json`), 'utf-8')
+    const raw = await readFile(path.join(SAMPLE_DIR || path.join(process.cwd(), 'data'), `${park}.json`), 'utf-8')
     return JSON.parse(raw) as ParkData
   } catch {
     return null
@@ -19,6 +22,11 @@ export default async function Page() {
 
   return (
     <AppShell updatedAt={updatedAt}>
+      {SAMPLE_DIR && (
+        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200">
+          サンプル表示中:ダミーデータです(本物の待ち時間ではありません)
+        </div>
+      )}
       {parks.length ? (
         <Dashboard parks={parks} />
       ) : (

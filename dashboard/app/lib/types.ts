@@ -28,6 +28,7 @@ export type Day = {
   close: string | null
   crowd_index: number | null
   runs: number
+  slots: number
   expected: number
   coverage: number | null
   median_gap: number | null

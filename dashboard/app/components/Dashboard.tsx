@@ -242,7 +242,7 @@ function QualityTable({ d }: { d: ParkData }) {
         <table className="w-full text-xs">
           <thead className="text-zinc-500">
             <tr className="border-b border-zinc-800">
-              {['日付', '営業(推定)', '取得回数', '充足率', '間隔(中央・最大)', '混雑指数'].map((h, i) => (
+              {['日付', '営業(推定)', '記録のある15分枠', '充足率', '取得回数', '間隔(中央・最大)', '混雑指数'].map((h, i) => (
                 <th key={h} className={`py-2 px-2 font-normal ${i === 0 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>
               ))}
             </tr>
@@ -252,10 +252,11 @@ function QualityTable({ d }: { d: ParkData }) {
               <tr key={x.date} className="border-b border-zinc-800/50">
                 <td className="py-1.5 px-2 text-zinc-200 whitespace-nowrap">{md(x.date)}({x.weekday}){x.holiday ? ` ${x.holiday}` : ''}</td>
                 <td className="py-1.5 px-2 text-right tabular-nums text-zinc-400 whitespace-nowrap">{x.open ? `${x.open}〜${x.close}` : '-'}</td>
-                <td className="py-1.5 px-2 text-right tabular-nums text-zinc-300 whitespace-nowrap">{x.runs} / {x.expected}</td>
+                <td className="py-1.5 px-2 text-right tabular-nums text-zinc-300 whitespace-nowrap">{x.slots} / {x.expected}</td>
                 <td className="py-1.5 px-2 text-right tabular-nums">
                   {x.coverage == null ? '-' : <Status ok={x.coverage >= 0.9}>{pct(x.coverage)}</Status>}
                 </td>
+                <td className="py-1.5 px-2 text-right tabular-nums text-zinc-400">{x.runs}</td>
                 <td className="py-1.5 px-2 text-right tabular-nums text-zinc-400 whitespace-nowrap">{x.median_gap ?? '-'}分・{x.max_gap ?? '-'}分</td>
                 <td className="py-1.5 px-2 text-right tabular-nums text-zinc-300">{x.crowd_index ?? '-'}</td>
               </tr>

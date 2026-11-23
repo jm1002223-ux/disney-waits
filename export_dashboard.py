@@ -49,14 +49,16 @@ def export(con, park):
             SELECT w.date_local, r.ts_local,
                    date_diff('minute', lag(r.ts_local) OVER (PARTITION BY w.date_local ORDER BY r.ts_local), r.ts_local) AS gap
             FROM win w JOIN runs r USING (date_local)
-            WHERE hour(r.ts_local) * 60 + minute(r.ts_local) BETWEEN w.o AND w.o + w.hours_est * 60)
+            WHERE hour(r.ts_local) * 60 + minute(r.ts_local) >= w.o AND hour(r.ts_local) * 60 + minute(r.ts_local) < w.o + w.hours_est * 60)
         SELECT w.date_local, w.weekday, w.is_weekend, w.holiday, w.event, w.open_est, w.close_est, w.hours_est, w.crowd_index,
-               count(r.ts_local) AS runs, median(r.gap) AS median_gap, max(r.gap) AS max_gap
+               count(r.ts_local) AS runs, median(r.gap) AS median_gap, max(r.gap) AS max_gap,
+               count(DISTINCT (hour(r.ts_local) * 60 + minute(r.ts_local)) // 15) AS slots
         FROM win w LEFT JOIN r USING (date_local) GROUP BY ALL ORDER BY w.date_local""", park, park)
     for d in days:
-        exp = (d["hours_est"] or 0) * 60 / 5
-        d["expected"] = int(exp)
-        d["coverage"] = r1(min(1.0, d["runs"] / exp) if exp else None, 3)
+        # 充足率は分析計画書の定義:営業時間(推定)の15分枠のうち、記録がある割合
+        exp_slots = (d["hours_est"] or 0) * 60 / 15
+        d["expected"] = int(round(exp_slots))
+        d["coverage"] = r1(min(1.0, d["slots"] / exp_slots) if exp_slots else None, 3)
 
     # アトラクションごとの指標
     base = {r["ride_no"]: r for r in rows(con, """
@@ -116,7 +118,7 @@ def export(con, park):
                   "coverage": r1(sum(cov) / len(cov), 3) if cov else None},
         "days": [{"date": str(d["date_local"]), "weekday": WEEKDAY.get(d["weekday"], d["weekday"]), "is_weekend": bool(d["is_weekend"]),
                   "holiday": d["holiday"], "event": d["event"], "open": d["open_est"], "close": d["close_est"],
-                  "crowd_index": r1(d["crowd_index"]), "runs": d["runs"], "expected": d["expected"], "coverage": d["coverage"],
+                  "crowd_index": r1(d["crowd_index"]), "runs": d["runs"], "slots": d["slots"], "expected": d["expected"], "coverage": d["coverage"],
                   "median_gap": r1(d["median_gap"]), "max_gap": d["max_gap"]} for d in days],
         "rides": rides,
         "unmatched": unmatched,
