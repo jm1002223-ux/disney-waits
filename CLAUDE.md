@@ -46,6 +46,7 @@
 | --- | --- |
 | `.github/workflows/collect.yml` | cron `*/5 0-8,15-23 * * *`(UTC)= 現地7時〜24時ごろ。`collect.py` を実行して `data/` をコミット。`workflow_dispatch` で手動実行可。`permissions: contents: write` |
 | `collect.py` | 両パークを取得し、`data/<park>/<現地日付>.csv` に追記。列:`fetched_utc, ride_id, ride_name, land, is_open, wait_time, last_updated`。営業判定は `rides.json` のアトラクションだけで行う(ショー・シングルライダーの列は数えない)。全部閉まっていればスキップ(ログ `park closed, skip`)。閉園直後は1回だけ記録。更新がなければスキップ(`no update since last fetch`)。ログの1行目は `アトラクション営業中 n/全体` |
+| (追加の出力) | ダッシュボード用の要約JSON:`model.py --backtest` → `models/<park>_backtest_summary.json`、`insights.py` → `insights/<park>_summary.json`(シルエット・ARI・時間帯別のシス調を含む)、`plan.py` → `plan_<park>_result.json`(**`plan_<park>.json` は入力の設定なので別名**)。計算方法は変えていない |
 | `analyze.py` | 15分ごとの中央値・90%点 → `profiles/`。`--park`、`--from/--to`、`--days all/weekday/weekend` |
 | `model.py` | 混雑指数(人気アトラクションの日平均÷期間平均×100)、予測モデル(日平均 = a + b×混雑指数、×時間帯の形)、ゲスト占有率(リトルの法則)、レポートHTML → `models/`。`--backtest` で1日ずつ抜いて精度検証 |
 | `insights.py` | クラスタリング(k-means++、シルエットでk決定、ブートストラップARI)、朝いちばんの価値ランキング、シス調(営業中の停止)の確率と時間帯 → `insights/`。`--boot`、`--seed` |
@@ -57,8 +58,8 @@
 | `calendar_extra.csv` | 日ごとのイベント・営業時間・天気(手で追記) |
 | `shows.csv` | ショーの時刻(`*` は毎日。公式アプリに合わせて手で直す) |
 | `parks.py` | パークごとのID・タイムゾーン。**まだどこからも使っていない**(東京対応の途中) |
-| `export_dashboard.py` | `warehouse/` から集計値だけを `dashboard/data/<park>.json` に書き出す(日別の充足率・実行間隔・混雑指数、アトラクション別の15分プロファイル〈全日/平日/週末の中央値・90%点〉、時台別中央値、平均・ピーク・空く時刻・稼働率・シス調、最終取得、rides.json にない名前) |
-| `dashboard/` | ダッシュボード(Next.js)。`app/page.tsx` がサーバー側で `data/*.json` を読む(`public/` には置かない)。`app/components/AppShell.tsx` は lesson-portal から流用。`data/*.json` は git 管理外、`.vercelignore` では除外しない(Vercelには上げる)。手元は `npm run dev`(パスワードなし) |
+| `export_dashboard.py` | ダッシュボード用の集計を `dashboard/data/<park>.json` に書き出す。**分析計画書の構成どおり**:品質(15分枠の充足率・実行間隔・名前の対応)、Q1(15分プロファイル)、Q2(model.py と同じ関数で、感謝祭の週/クリスマス前を基準に含める・除くの4通り)、Q3〜Q7(models/・insights/ の出力を読む)、Q8(ノート⑤⑦と同じSQL)、品質の判定基準6項目、最終プラン(`plan_<park>_result.json`)、各出力の計算日時と日数 |
+| `dashboard/` | ダッシュボード(Next.js)。タブは計画書の成果物の5つ(①品質 11/30、②基礎分析 12/7、③予測と分類 12/14、④繁忙期 12/21、⑤最終プラン 12/26)。各Qに計画書の問い・手法・必要日数・初回日を表示し、日数不足は「参考値」、出力がなければ実行するコマンドを表示。`app/page.tsx` がサーバー側で `data/*.json` を読む(`public/` には置かない)。`DASHBOARD_DATA_DIR` を指定するとその集計を読み「サンプル表示中」の帯を出す。`data/*.json` は git 管理外、`.vercelignore` では除外しない。手元は `npm run dev`(パスワードなし) |
 | `analysis.ipynb` | 9つの分析とSQLの自由欄。日本語フォントは自動で選ぶ |
 | `README.md` | 日本語の全体説明 |
 
@@ -105,6 +106,7 @@ cd dashboard && npx vercel --prod   # 公開中のダッシュボードを更新
 - 表示待ち時間は実際より長めのことが多い。順番の比較には使えるが、分数は余裕を持って読む
 - ライトニングレーンの戻り時刻は取れないので、プランは見込み値を使う。処理人数も推定値
 - シス調は5分未満の停止を数え落とす
+- **混雑指数の定義が2つある(既存の不一致)**:`model.py` は「rides.json の fallback_peak ≥ 40 のアトラクション」、`warehouse.py` の `dim_calendar.crowd_index`(ノート①・gbm.py が使う)は「実データの期間平均 ≥ 40」。ダッシュボードのQ2は予測・プランと揃えるため model.py 側。統一するかはユーザー未決定
 - アトラクションの休止や名前の変更があると、`rides.json` にない名前が記録に出る。月曜の作業で確認する
 - パスのルール:マルチパスは対象ごとに1日1回、次の予約は使った後か予約から2時間後。ライズ・オブ・ザ・レジスタンスとラジエーター・スプリングス・レーサーはシングルパスのみ(1日1回、両方買える)。早期入園は2026/1/5で終了
 

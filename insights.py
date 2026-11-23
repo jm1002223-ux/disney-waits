@@ -325,8 +325,23 @@ def main():
             v = dt[k]; top = "、".join(f"{h}時台" for h, _ in v["start_hours"].most_common(3))
             w.writerow([k, rides[k]["name"], f"{v['p_day']:.0%}", round(v["events_per_day"], 2), round(v["avg_min"]), f"{v['p_morning_down']:.0%}", top, v["days"]])
 
+    # ダッシュボード(export_dashboard.py)用の要約。計算は上のCSVと同じ
+    json.dump({
+        "park": a.park, "days": len(days), "k": K, "silhouette": round(sil, 3), "ari": round(stab, 3), "boot_used": len(aris),
+        "k_scores": {str(k): round(v[0], 3) for k, v in scores.items()},
+        "groups": [{"id": gid[l], "name": gname[l], "members": [
+            {"no": k, "name": rides[k]["name"], "mean": round(F[k]["mean"], 1), "confidence": round(mean(co[k]), 2) if co[k] else None,
+             "silhouette": round(sil_each[keys.index(k)], 2)} for k in sorted(groups[l], key=lambda k: -F[k]["mean"])]} for l in order],
+        "ropedrop": [{"rank": i + 1, "group": gid[base[keys.index(k)]], "no": k, "name": rides[k]["name"], "early": round(rd[k]["early"], 1),
+                      "mid": round(rd[k]["mid"], 1), "p_open": round(rd[k]["p_open"], 3), "saved": round(rd[k]["saved"], 1)} for i, k in enumerate(rank)],
+        "downtime": [{"no": k, "name": rides[k]["name"], "p_day": round(v["p_day"], 3), "events_per_day": round(v["events_per_day"], 2),
+                      "avg_min": round(v["avg_min"], 1), "p_morning_down": round(v["p_morning_down"], 3), "days": v["days"],
+                      "start_hours": {str(h): n for h, n in v["start_hours"].items()},
+                      "p_hour": {str(h): round(p, 3) for h, p in v["p_hour"].items()}} for k, v in sorted(dt.items(), key=lambda kv: -kv[1]["p_day"])],
+    }, open(f"insights/{a.park}_summary.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
     # HTML
-    verdict = "安定(同じデータの取り方なら、ほぼ同じ分け方になる)" if stab >= 0.75 else "やや不安定(データが増えると変わる可能性あり)" if stab >= 0.5 else "不安定(データ不足。日数が増えてから見直す)"
+    verdict ="安定(同じデータの取り方なら、ほぼ同じ分け方になる)" if stab >= 0.75 else "やや不安定(データが増えると変わる可能性あり)" if stab >= 0.5 else "不安定(データ不足。日数が増えてから見直す)"
     gsec = ""
     for l in order:
         rows = "".join(f'<tr><td class="n">{k}</td><td>{rides[k]["name"]}</td><td class="n">{F[k]["mean"]:.0f}</td><td class="n">{(mean(co[k]) if co[k] else 0):.0%}</td></tr>' for k in sorted(groups[l], key=lambda k: -F[k]["mean"]))

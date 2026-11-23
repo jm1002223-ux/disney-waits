@@ -126,6 +126,161 @@ def export(con, park):
     }
 
 
+# ── 分析計画書(docs/分析計画書.md)に合わせた部分 ─────────────────
+# 特殊な日:含める場合と除く場合を比べる(計画書「データの前提と注意点」)
+SPECIAL = {"thanksgiving": ("感謝祭の週", "2026-11-26", "2026-11-29"), "christmas": ("クリスマス前", "2026-12-19", "2026-12-26")}
+
+
+def read_json(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def read_csv(path):
+    import csv
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as f:
+            return list(csv.DictReader(f))
+    except FileNotFoundError:
+        return None
+
+
+def stamp(path):
+    """出力ファイルの更新時刻(日本時間)。古い計算結果を見分けるため"""
+    if not os.path.exists(path):
+        return None
+    return datetime.fromtimestamp(os.path.getmtime(path), ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d %H:%M")
+
+
+def crowd_index_variants(park):
+    """Q2 混雑指数。model.py と同じ計算(同じ関数)で、特殊な日を基準に含める/除くの4通り"""
+    import model as M
+    try:
+        rides, W = M.load_w(park)
+    except SystemExit:
+        return None
+    days = sorted({d for r in W.values() for d in r})
+    core = [k for k in W if rides[k]["fallback_peak"] >= 40]
+    span = lambda a, b: {d for d in days if a <= d <= b}
+    tg, xm = span(*SPECIAL["thanksgiving"][1:]), span(*SPECIAL["christmas"][1:])
+    out = {}
+    for key, excl in {"all": set(), "ex_thanksgiving": tg, "ex_christmas": xm, "ex_both": tg | xm}.items():
+        use = [d for d in days if d not in excl]
+        if not use:
+            continue
+        overall = {k: M.mean([w for d, sl in W[k].items() if d in use for w in sl.values()]) for k in W}
+        vals = {d: M.day_ci(W, d, overall, core) for d in days}
+        out[key] = {d: round(v, 1) for d, v in vals.items() if v is not None}
+    return out
+
+
+def analysis(con, park, base):
+    days_n = base["range"]["days"]
+    mdl = read_json(f"models/{park}.json")
+    bt = read_json(f"models/{park}_backtest_summary.json")
+    ins = read_json(f"insights/{park}_summary.json")
+    plan = read_json(f"plan_{park}_result.json")
+    gbm = read_csv(f"models/{park}_gbm_compare.csv")
+    imp = read_csv(f"models/{park}_gbm_importance.csv")
+    rides_json = json.load(open("rides.json", encoding="utf-8"))[park]
+
+    # Q3 混雑指数モデル(model.py)。画面で 混雑指数X → 予測 を計算できるよう係数と形を渡す
+    q3 = None
+    if mdl:
+        q3 = {"rides": {k: {"name": rides_json[k]["name"], "a": round(m["a"], 3), "b": round(m["b"], 4), "r2": round(m["r2"], 3), "days": m["days"],
+                            "shape": [[int(s), v] for s, v in sorted(m["shape"].items(), key=lambda kv: int(kv[0]))]}
+                        for k, m in mdl["rides"].items()},
+              "gbm_importance": [{"name": r["条件"], "value": float(r["外すと誤差が何分増えるか"])} for r in (imp or [])][:8]}
+
+    # Q4 精度(model.py --backtest と gbm.py)
+    q4 = None
+    if bt or gbm:
+        q4 = {"backtest": bt and {"days": bt["days"], "all": bt["all"], "top": bt["top"], "per_day": bt["per_day"],
+                                  "rides": sorted(({"no": k, "name": rides_json[k]["name"], **v} for k, v in bt["rides"].items()), key=lambda r: -r["known"])},
+              "gbm": [{"method": r["予測"], "all": float(r["平均誤差・全体(分)"]),
+                       "top": float(r["平均誤差・人気アトラクション(分)"]) if r.get("平均誤差・人気アトラクション(分)") else None,
+                       "bands": {b: (float(r[b]) if r.get(b) else None) for b in ["〜10時", "10〜12時", "12〜15時", "15〜18時", "18〜21時", "21時〜"]}}
+                      for r in gbm] if gbm else None}
+
+    # Q8 ショー中に空くアトラクション(ノート⑤と同じ:直前30分とショー中の平均待ちの比較)
+    has_show = con.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'dim_show'").fetchone()[0] > 0
+    shows = []
+    if has_show:
+        for r in rows(con, """
+            WITH x AS (
+              SELECT s.show_name, f.ride_no, f.name,
+                     avg(f.wait_time) FILTER (WHERE f.slot15 >= s.start_min AND f.slot15 < s.end_min) AS during,
+                     avg(f.wait_time) FILTER (WHERE f.slot15 >= s.start_min - 30 AND f.slot15 < s.start_min) AS before,
+                     min(s.start_min) AS start_min, min(s.end_min) AS end_min, count(DISTINCT f.date_local) AS days
+              FROM fact_waits f JOIN dim_show s ON s.park = f.park AND s.date_local = f.date_local
+              WHERE f.park = ? AND f.ride_no IS NOT NULL GROUP BY ALL)
+            SELECT * FROM x WHERE before >= 15 ORDER BY show_name, during / before""", park):
+            shows.append({"show": r["show_name"], "time": f"{hm(r['start_min'])}〜{hm(r['end_min'])}", "no": r["ride_no"], "name": r["name"],
+                          "before": r1(r["before"]), "during": r1(r["during"]),
+                          "change": r1(100 * (r["during"] / r["before"] - 1)) if r["during"] is not None else None, "days": r["days"]})
+    # Q8 ゲスト占有率(ノート⑦と同じ v_queue_people。2時間ごとの平均の割合)
+    occ = rows(con, """
+        SELECT ride_no, name, (slot15 // 120) * 2 AS block, avg(share) AS share, avg(people_in_line) AS people
+        FROM v_queue_people WHERE park = ? AND ride_no IS NOT NULL GROUP BY ALL""", park)
+    total = {}
+    for r in occ:
+        total[r["ride_no"]] = total.get(r["ride_no"], 0) + (r["people"] or 0)
+    top = [k for k, _ in sorted(total.items(), key=lambda kv: -kv[1])[:8]]
+    occupancy = {"blocks": sorted({r["block"] for r in occ}),
+                 "rides": [{"no": k, "name": next(r["name"] for r in occ if r["ride_no"] == k),
+                            "share": {str(r["block"]): r1(r["share"], 3) for r in occ if r["ride_no"] == k}} for k in top]}
+
+    # 品質の判定基準(計画書の表と同じ6項目)
+    cov = base["range"]["coverage"]
+    criteria = [
+        {"id": "coverage", "name": "データの充足率", "how": "営業時間の15分枠のうち、記録がある割合", "line": "90%以上",
+         "value": None if cov is None else f"{cov:.0%}", "ok": None if cov is None else cov >= 0.9,
+         "fallback": "実行ログを確認。大きな欠けの日は分析から外す", "source": "export_dashboard.py"},
+        {"id": "error", "name": "待ち時間予測の誤差", "how": "--backtest の平均誤差(混雑指数が分かっている場合、人気アトラクション)", "line": "±10分以内",
+         "value": None if not bt else f"±{bt['top']['known']:.1f}分", "ok": None if not bt else bt["top"]["known"] <= 10,
+         "fallback": "時間帯の形を平日/週末で分ける、外れ値の日を外す", "source": "model.py --backtest", "min_days": 5},
+        {"id": "ci_guess", "name": "混雑指数の見込み精度", "how": "「曜日の平均で仮定」と「指数なし」の誤差の差(人気アトラクション)", "line": "指数なしより小さい",
+         "value": None if not bt else f"仮定 ±{bt['top']['unknown']:.1f}分 / 指数なし ±{bt['top']['naive']:.1f}分",
+         "ok": None if not bt else bt["top"]["unknown"] < bt["top"]["naive"],
+         "fallback": "旅行当日の指数は混雑カレンダーから決める", "source": "model.py --backtest", "min_days": 5},
+        {"id": "silhouette", "name": "クラスタの分かれ方", "how": "シルエット係数", "line": "0.25以上",
+         "value": None if not ins else f"{ins['silhouette']:.2f}(k={ins['k']})", "ok": None if not ins else ins["silhouette"] >= 0.25,
+         "fallback": "特徴量を減らす、グループ数を指定し直す", "source": "insights.py", "min_days": 5},
+        {"id": "ari", "name": "クラスタの安定性", "how": "ブートストラップの調整ランド指数(ARI)", "line": "0.75以上",
+         "value": None if not ins else f"{ins['ari']:.2f}", "ok": None if not ins else ins["ari"] >= 0.75,
+         "fallback": "データが増えるまで参考扱いにする", "source": "insights.py", "min_days": 5},
+        {"id": "slack", "name": "プランの余裕", "how": "最終プランの最後の予定と退園時刻の差", "line": "30分以上",
+         "value": None if not plan else f"{plan['slack_min']}分", "ok": None if not plan else plan["slack_min"] >= 30,
+         "fallback": "省略候補の上から外す", "source": "plan.py"},
+    ]
+
+    # 各出力がいつ・何日分で作られたか(古い結果を見分ける)
+    outputs = {
+        "model": {"file": f"models/{park}.json", "at": stamp(f"models/{park}.json"), "days": len(mdl["daily_ci"]) if mdl else None},
+        "backtest": {"file": f"models/{park}_backtest_summary.json", "at": stamp(f"models/{park}_backtest_summary.json"), "days": bt and bt["days"]},
+        "gbm": {"file": f"models/{park}_gbm_compare.csv", "at": stamp(f"models/{park}_gbm_compare.csv"), "days": None},
+        "insights": {"file": f"insights/{park}_summary.json", "at": stamp(f"insights/{park}_summary.json"), "days": ins and ins["days"]},
+        "plan": {"file": f"plan_{park}_result.json", "at": stamp(f"plan_{park}_result.json"), "days": None},
+    }
+
+    return {
+        "data_days": days_n,
+        "special": {k: {"label": v[0], "from": v[1], "to": v[2]} for k, v in SPECIAL.items()},
+        "crowd_index": crowd_index_variants(park),
+        "q3": q3, "q4": q4,
+        "q5": ins and {"k": ins["k"], "silhouette": ins["silhouette"], "ari": ins["ari"], "k_scores": ins["k_scores"], "groups": ins["groups"]},
+        "q6": ins and ins["ropedrop"],
+        "q7": ins and ins["downtime"],
+        "q8": {"shows": shows, "occupancy": occupancy},
+        "criteria": criteria,
+        "outputs": outputs,
+        "plan": plan,
+    }
+
+
 def main():
     if not os.path.exists(DB):
         sys.exit("warehouse/ がありません。先に python warehouse.py を実行してください")
@@ -135,6 +290,7 @@ def main():
         data = export(con, park)
         if data is None:
             print(f"[{park}] データなし、スキップ"); continue
+        data.update(analysis(con, park, data))
         path = os.path.join(OUT, f"{park}.json")
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, separators=(",", ":"))

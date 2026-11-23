@@ -163,6 +163,15 @@ def backtest(park):
     allv = lambda key: mean([e for v in err[key].values() for e in v])
     top = [k for k in rides if rides[k]["fallback_peak"] >= 60 and k in err["known"]]
     topv = lambda key: mean([e for k in top for e in err[key][k]]) if top else 0
+    # ダッシュボード(export_dashboard.py)用の要約。計算は上と同じ
+    json.dump({"park": park, "days": len(days), "top_rides": top,
+               "all": {k: round(allv(k), 2) for k in ("known", "unknown", "naive")},
+               "top": {k: round(topv(k), 2) for k in ("known", "unknown", "naive")},
+               "rides": {k: {"known": round(mean(err["known"][k]), 1), "unknown": round(mean(err["unknown"][k]), 1),
+                             "naive": round(mean(err["naive"][k]), 1), "n": len(err["known"][k])} for k in err["known"]},
+               "per_day": [{"date": d, "ci_true": round(t, 1) if t is not None else None, "ci_guess": round(g, 1), "err": round(e, 2)}
+                           for d, t, g, e in per_day]},
+              open(f"models/{park}_backtest_summary.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"{park}: {len(days)}日分で検証しました(1日ずつ隠して予測)")
     print(f"  平均誤差(全アトラクション)  指数が分かっている場合 ±{allv('known'):.1f}分 / 指数を曜日の平均で仮定 ±{allv('unknown'):.1f}分 / 指数なし ±{allv('naive'):.1f}分")
     print(f"  平均誤差(人気アトラクション) 指数が分かっている場合 ±{topv('known'):.1f}分 / 指数を曜日の平均で仮定 ±{topv('unknown'):.1f}分 / 指数なし ±{topv('naive'):.1f}分")

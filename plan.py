@@ -367,6 +367,7 @@ def main():
         lines += ["", "次の予約は「パスを使った後」か「予約から2時間後」の早い方からできます。表の予約時刻は、その最も早い時刻です。",
                   f"取る順番を自分で決めたいときは `ll_priority` に番号を並べ、取らないものは `ll_skip` に入れます。"]
 
+    N = None
     if use_ll and elig and not a.no_compare:
         print("計算中: マルチパスを使わない場合 …", flush=True)
         N = run({**cfg, "use_multi_pass": False}, rides, W, iters)
@@ -395,6 +396,31 @@ def main():
               "- マルチパスの戻り時刻はAPIから取れないため、`ll_delay_*` の見込み値にバッファ(`ll_buffer_min`)を足して計算しています。当日アプリに出る時刻に合わせて数字を直すと、計算し直せます",
               "- スタンバイの待ち時間は表示値がもとで、実際より長めに出やすいです",
               "", "Powered by [Queue-Times.com](https://queue-times.com/)"]
+    # ダッシュボード(export_dashboard.py)用。中身は上のMarkdownと同じ
+    def ll_row(k):
+        r = rides[k]; row = {"no": k, "name": r["name"], "priority": pr[k], "demand": r.get("ll_demand"), "rank": R["cands"].index(k) + 1 if k in R["cands"] else None}
+        used = next((l for l in R["log"] if l[0] == ("LL", k)), None)
+        if used:
+            _, _, t, _, _, (bk, rt) = used
+            return {**row, "take": True, "book": hm(bk), "return": hm(rt), "use": hm(t), "standby_then": round(W.at(k, t))}
+        return {**row, "take": False, "why": R["excluded"].get(k) or R["note"].get(k) or "予約の順番が回ってこない"}
+    summary = lambda X: {"rides": len(X["done"]), "shows": len(X["shows"]), "wait_min": round(X["wait"]), "end": hm(X["end"]),
+                         "missed": [k for k in want if k not in X["done"]]}
+    plan_json = {
+        "park": park, "date": cfg.get("date"), "entry": cfg["entry"], "exit": cfg["exit"], "ll_use_until": until,
+        "wait_source": meta.get("model") or (f"{meta.get('from')}〜{meta.get('to')}の{meta.get('days_used')}日分" if meta.get("from") else "推定値"),
+        "slack_min": round(tmin(cfg["exit"]) - R["end"]),
+        "steps": [{"time": hm(t), "kind": it[0], "name": label(it)[0], "tag": label(it)[1], "wait": round(wait), "walk": round(w),
+                   "note": (f"{hm(ex[0])}にパスを取る(戻り{hm(ex[1])}〜)" if it[0] == "LL" else f"〜{hm(t + dur)}" if it[0] in ("SH", "ML") else "")}
+                  for it, w, t, wait, dur, ex in R["log"]],
+        "skipped": [{"name": (f"{it[1]}. {rides[it[1]]['name']}" if it[0] == "R" else label(it)[0]), "priority": R["val"][it]}
+                    for it in sorted(skipped, key=lambda i: R["val"][i])],
+        "multi_pass": [ll_row(k) for k in R["cands"] + [k for k in elig if k not in R["cands"]]] if use_ll else [],
+        "with_ll": summary(R), "without_ll": summary(N) if N else None,
+    }
+    # plan_<park>.json は入力の設定ファイルなので、結果は別名にする(上書きしない)
+    json.dump(plan_json, open(f"plan_{park}_result.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
     out = f"plan_{park}.md"
     open(out, "w", encoding="utf-8").write("\n".join(lines))
     print("\n".join(lines)); print(f"\n→ {out} に保存しました")
