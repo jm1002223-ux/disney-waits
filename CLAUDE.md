@@ -22,7 +22,8 @@
 - **本物のデータ取得を確認済み**:`data/DCA/2026-11-23.csv`(31行)。列は想定どおりの7列で、カンマを含む名前(`Monsters, Inc. …`)も正しく入る。この1回は閉園中に保存された(下記の判定変更の前)。行はすべて休止扱いで、分析への影響はない。`data/` なので消さない
 - **collect.py の営業判定を変更**(2026-11-23):夜間もWorld of Colorなどのショーが `is_open` になり、DCAの閉園を判定できなかった。判定は `rides.json` に載っているアトラクションだけで行う。閉園直後の1回だけ記録する(`park just closed, write once`)。ローカルで5つの場面と本物のデータで確認済み
 - Queue-Timesの一覧には `rides.json` にない項目がある(DCA:シングルライダーの列4つ、World of Color、Pixar Pal-A-Round – Non-Swinging)。月曜の作業で対応表を見直す
-- 定期実行:現地 11/23 7時(日本時間 11/24 0時)から開始
+- **定期実行(schedule)が一度も起動しない(2026-11-23 15:00〜20:10 UTC、未解決)**:手動実行は成功、ワークフローは active、GitHubの障害なし。試したこと:actions更新、cron `2-59/5 0-8,15-23`、cron `4-59/10 * * * *`(終日10分おき、現在の設定)、ファイル名を `collect-waits.yml` に変更して再登録。いずれも起動せず。新しいアカウント・リポジトリで定期実行が遅れる/止められる例がある
+  - **代行中**:PCで `scratchpad/local_collect.sh`(5分おきに collect.py → git push、コミット名 `data: … (local)`)を実行。GitHubの定期実行が1回でも出たら自動で止まる。PCがスリープすると止まる。Windowsでは `PYTHONIOENCODING=utf-8` が必要(cp932で名前の `–` が出力できず落ちる)
 - PCの分析環境:仮想環境 `C:\Users\user\venvs\disney-waits`(`requirements.txt` と `tzdata` を導入済み)。Windowsストア版Pythonのままだと、JupyterLabのインストールがパスの長さの上限で失敗するため。使う前に `C:\Users\user\venvs\disney-waits\Scripts\Activate.ps1`
 
 ## 技術スタック
