@@ -33,7 +33,11 @@
     32,
     34
   ],
-  "allow_standby_fallback": true,
+  "ll_use_until": "23:00",
+  "ll_buffer_min": 15,
+  "ll_min_standby": 30,
+  "ll_priority": [],
+  "ll_skip": [],
   "priority": {
     "19": 4,
     "32": 3,

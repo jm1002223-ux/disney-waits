@@ -48,8 +48,8 @@
 | `insights.py` | クラスタリング(k-means++、シルエットでk決定、ブートストラップARI)、朝いちばんの価値ランキング、シス調(営業中の停止)の確率と時間帯 → `insights/`。`--boot`、`--seed` |
 | `warehouse.py` | CSV → DuckDB+Parquet。テーブル `fact_waits`、`dim_ride`、`dim_calendar`(米国祝日、ホリデー期間、営業時間、混雑指数、`calendar_extra.csv`)、`dim_show`(列名は `show_name`。`show` は予約語なので使わない)。ビュー `v_slot_profile`、`v_daily_ride`、`v_downtime_events`、`v_queue_people` |
 | `gbm.py` | 勾配ブースティングと他の方式を比較(A〜Eの5方式、日単位のGroupKFold、並べ替え重要度)。`models/<park>_gbm.joblib` を保存。`--fast` |
-| `plan.py` | 1日の回り方を最適化。待ち時間の出し方は `wait_model` で `median` / `crowd_index` / `gbm` を選ぶ。出力 `plan_<park>.md` |
-| `plan_DL.json` / `plan_DCA.json` | 入退園時刻、混雑指数、マルチパス・シングルパス・スタンバイの対象、優先度、ショー、食事、パスの戻り時刻の見込み(`ll_delay_high/mid`)、反復回数 |
+| `plan.py` | 1日の回り方を最適化。待ち時間の出し方は `wait_model` で `median` / `crowd_index` / `gbm` を選ぶ。出力 `plan_<park>.md`。**マルチパスは優先順位どおりに予約する**(ユーザーの決定。合計時間の最小化で選ぶと、パスの列は約10分なので必ずパスになるため)。候補から外すもの:スタンバイ平均が `ll_min_standby` 未満、戻り時刻+バッファ(`ll_buffer_min`)が `ll_use_until` に入らない、`ll_skip`。焼きなまし法で決めるのは、パスを使うタイミングとそれ以外の順番だけ。`--fast` / `--robust` / `--no-compare` |
+| `plan_DL.json` / `plan_DCA.json` | 入退園時刻、混雑指数、乗りたいもの(`multi_pass`/`standby` はどちらでも同じ扱い)、シングルパス、優先度、ショー、食事、パスの設定(`ll_use_until`:DL 23:00/DCA 21:00〈閉園22時の1時間前、ユーザー指定〉、`ll_buffer_min` 15、`ll_min_standby` 30、`ll_priority`、`ll_skip`、`ll_delay_high/mid`)、反復回数 |
 | `rides.json` | アトラクションの対応表(番号、座標、1時間の処理人数の推定、パス種別)。DL 47、DCA 25。TDL/TDSも入っているが未使用 |
 | `calendar_extra.csv` | 日ごとのイベント・営業時間・天気(手で追記) |
 | `shows.csv` | ショーの時刻(`*` は毎日。公式アプリに合わせて手で直す) |
