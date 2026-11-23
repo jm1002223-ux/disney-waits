@@ -6,6 +6,7 @@
 - 返答は**日本語**。専門用語は短く言い換える
 - 先にやることを1文で言ってから作業し、終わったら結果を短く報告する。手順の実況はいらない
 - 分析期間(〜12/26)は **このリポジトリの技術スタックを変えない**(ユーザーの決定)。新しいライブラリやサービスを足す前に確認する
+  - 例外(2026-11-23 ユーザー承認):ダッシュボード用に `dashboard/`(Next.js一式)と Vercel を追加。収集・分析のPythonは変えない
 - `data/` の中身は手で編集しない(GitHub Actionsが追記するため、編集すると `git pull` が衝突する)
 - トークンやキーをファイルやコミットに書かない。`gh` は入っているが**未ログイン**(`C:\Program Files\GitHub CLI\gh.exe`)。push は git(資格情報は保存済み)で行う。ブラウザでのGitHub操作(設定・手動実行)はユーザーが自分でやる方が速いと言っている
 
@@ -35,6 +36,8 @@
 | 処理・学習・図 | pandas、scikit-learn(HistGradientBoostingRegressor、k-means、GroupKFold)、matplotlib、joblib |
 | 分析環境 | JupyterLab(`analysis.ipynb`) |
 | ルート最適化 | 自作(焼きなまし法、`plan.py`) |
+| ダッシュボード | `dashboard/`:Next.js 16.2.6 + React 19.2.4 + Tailwind 4.2.2 + Recharts 3.8.1 + lucide-react(`music-lesson-portal` のUIを流用、版も同じに固定)。Node.js 24 |
+| 公開先 | Vercel(CLIで手動デプロイ)。環境変数 `DASHBOARD_PASSWORD` によるパスワード(Basic認証、`dashboard/proxy.ts`)付き |
 
 `requirements.txt`:duckdb, pandas, matplotlib, jupyterlab, scikit-learn。Windowsでは `tzdata` も入れる。
 
@@ -54,6 +57,8 @@
 | `calendar_extra.csv` | 日ごとのイベント・営業時間・天気(手で追記) |
 | `shows.csv` | ショーの時刻(`*` は毎日。公式アプリに合わせて手で直す) |
 | `parks.py` | パークごとのID・タイムゾーン。**まだどこからも使っていない**(東京対応の途中) |
+| `export_dashboard.py` | `warehouse/` から集計値だけを `dashboard/data/<park>.json` に書き出す(日別の充足率・実行間隔・混雑指数、アトラクション別の15分プロファイル〈全日/平日/週末の中央値・90%点〉、時台別中央値、平均・ピーク・空く時刻・稼働率・シス調、最終取得、rides.json にない名前) |
+| `dashboard/` | ダッシュボード(Next.js)。`app/page.tsx` がサーバー側で `data/*.json` を読む(`public/` には置かない)。`app/components/AppShell.tsx` は lesson-portal から流用。`data/*.json` は git 管理外、`.vercelignore` では除外しない(Vercelには上げる)。手元は `npm run dev`(パスワードなし) |
 | `analysis.ipynb` | 9つの分析とSQLの自由欄。日本語フォントは自動で選ぶ |
 | `README.md` | 日本語の全体説明 |
 
@@ -66,6 +71,8 @@ python model.py --park DCA && python model.py --park DCA --backtest
 python insights.py --park DL && python insights.py --park DCA
 python gbm.py --park DL      # 10日分たまってから
 jupyter lab analysis.ipynb
+python export_dashboard.py   # ダッシュボード用の集計を書き出す
+cd dashboard && npx vercel --prod   # 公開中のダッシュボードを更新(Vercel CLI。GitHub連携はしない:連携するとJSONなしでビルドされる)
 ```
 必要な日数の目安:`analyze`・`plan` 1日〜、`model` 3日〜、`--backtest`・`insights` 5〜7日〜、GBMとクラスタリングは10〜14日〜。
 
@@ -89,6 +96,7 @@ jupyter lab analysis.ipynb
 - 集めた生データを再配布しない(リポジトリは公開だが、配布物にはしない)。外に出すなら事前にQueue-Timesへ相談
 - Queue-Timesのウェブページ(過去データのページなど)はスクレイピングしない。使うのは公開APIだけ
 - ディズニー公式の画像・ロゴは使わない
+- ダッシュボードは**親しい友人に見せる程度の私的な範囲**(ユーザーの決定、2026-11-23)。パスワード必須、検索エンジンには載せない(noindex)、出すのは集計値だけ、フッターに Queue-Times の表記。それ以上に広く見せるなら、事前にQueue-Timesへ相談
 
 ## 知っておくべき前提・落とし穴
 - 時刻:GitHubはUTC、データの日付は現地(America/Los_Angeles)、ユーザーは日本時間。12月は日本が17時間進んでいる。collect・analyze・model・insights・warehouse はタイムゾーンを `America/Los_Angeles` に固定している
@@ -102,5 +110,6 @@ jupyter lab analysis.ipynb
 
 ## 止めていること・残りの仕事
 - **東京対応(保留中)**:`parks.py` を各スクリプトに組み込む(タイムゾーン、日本の祝日、`--park` の選択肢にTDL/TDS、cronを `*/5 * * * *`、`plan_TDL.json`/`plan_TDS.json`、README)。ユーザーが再開を言うまで手を付けない
+- **ダッシュボードの初回デプロイ(未実施)**:`npm i -g vercel` → `vercel login` → `dashboard/` で `vercel link`(新規プロジェクト、Root は `dashboard`)→ `vercel env add DASHBOARD_PASSWORD production` → `python export_dashboard.py` 後に `vercel --prod`。データが1日分以上たまってから。ダミーデータでの表示・ビルド・パスワード(401/200)は確認済み
 - 12/26で分析が終わったら、Actionsの `collect-wait-times` を「Disable workflow」で止める
 - 任意の候補(未依頼):Queue-Timesへ過去データの問い合わせメール(英語)

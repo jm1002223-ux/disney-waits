@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.vercel/
+.env*
+next-env.d.ts
+*.tsbuildinfo
+# 集計値は export_dashboard.py で作る(gitに入れない)
+data/*.json

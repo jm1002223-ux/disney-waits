@@ -1,0 +1,6 @@
+# Vercel CLI で上げるときに除くもの。
+# data/*.json(集計値)は git には入れないが、Vercel には上げる必要があるので、ここでは除かない。
+node_modules
+.next
+.env*
+*.tsbuildinfo
