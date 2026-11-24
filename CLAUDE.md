@@ -21,7 +21,7 @@
 - **セットアップ完了**:公開リポジトリ https://github.com/jm1002223-ux/disney-waits (`main`)にpush済み。Actionsの書き込み権限を設定し、手動実行(2026-11-23 13:24 UTC)は成功
 - **本物のデータ取得を確認済み**:`data/DCA/2026-11-23.csv`(31行)。列は想定どおりの7列で、カンマを含む名前(`Monsters, Inc. …`)も正しく入る。この1回は閉園中に保存された(下記の判定変更の前)。行はすべて休止扱いで、分析への影響はない。`data/` なので消さない
 - **collect.py の営業判定を変更**(2026-11-23):夜間もWorld of Colorなどのショーが `is_open` になり、DCAの閉園を判定できなかった。判定は `rides.json` に載っているアトラクションだけで行う。閉園直後の1回だけ記録する(`park just closed, write once`)。ローカルで5つの場面と本物のデータで確認済み
-- Queue-Timesの一覧には `rides.json` にない項目がある(DCA:シングルライダーの列4つ、World of Color、Pixar Pal-A-Round – Non-Swinging)。月曜の作業で対応表を見直す
+- Queue-Timesの一覧にあって分析しない17件(DL 11、DCA 6)は、`rides.json` の `_not_analyzed` に登録済み(2026-11-24)。シングルライダーの列は12/7の基礎分析でスタンバイとの差を見る
 - **GitHubの定期実行(schedule)はこのアカウントで起動しない**(2026-11-23 15:00〜22:20 UTC、cronの書き方・ファイル名の変更でも0回。このアカウントで定期実行が動いたことは一度もない)。**2026-11-23 22:24 UTC から「自分で次の回を予約する方式」に変更して稼働中**(下の `collect-waits.yml` の行)。PCでの代行(`local_collect.sh`)は停止済み
   - 毎日の確認:Actions に `in_progress` 1つと `pending` 1つがあること、`data/` に `wait-time-bot` のコミットが5分おきに入っていること。鎖が切れたら(両方ない)Actionsの画面で手動実行すれば再開する。Windowsで collect.py を動かすときは `PYTHONIOENCODING=utf-8` が必要
 - PCの分析環境:仮想環境 `C:\Users\user\venvs\disney-waits`(`requirements.txt` と `tzdata` を導入済み)。Windowsストア版Pythonのままだと、JupyterLabのインストールがパスの長さの上限で失敗するため。使う前に `C:\Users\user\venvs\disney-waits\Scripts\Activate.ps1`
@@ -51,11 +51,11 @@
 | `analyze.py` | 15分ごとの中央値・90%点 → `profiles/`。`--park`、`--from/--to`、`--days all/weekday/weekend` |
 | `model.py` | 混雑指数(人気アトラクションの日平均÷期間平均×100)、予測モデル(日平均 = a + b×混雑指数、×時間帯の形)、ゲスト占有率(リトルの法則)、レポートHTML → `models/`。`--backtest` で1日ずつ抜いて精度検証 |
 | `insights.py` | クラスタリング(k-means++、シルエットでk決定、ブートストラップARI)、朝いちばんの価値ランキング、シス調(営業中の停止)の確率と時間帯 → `insights/`。`--boot`、`--seed` |
-| `warehouse.py` | CSV → DuckDB+Parquet。テーブル `fact_waits`、`dim_ride`、`dim_calendar`(米国祝日、ホリデー期間、営業時間、混雑指数、`calendar_extra.csv`)、`dim_show`(列名は `show_name`。`show` は予約語なので使わない)。ビュー `v_slot_profile`、`v_daily_ride`、`v_downtime_events`、`v_queue_people` |
+| `warehouse.py` | CSV → DuckDB+Parquet。テーブル `fact_waits`、`dim_ride`、`dim_calendar`(米国祝日、ホリデー期間、営業時間、混雑指数、`calendar_extra.csv`)、`dim_ride_other`(分析対象外の登録済み項目)、`dim_show`(列名は `show_name`。`show` は予約語なので使わない)。ビュー `v_slot_profile`、`v_daily_ride`、`v_downtime_events`、`v_queue_people` |
 | `gbm.py` | 勾配ブースティングと他の方式を比較(A〜Eの5方式、日単位のGroupKFold、並べ替え重要度)。`models/<park>_gbm.joblib` を保存。`--fast` |
 | `plan.py` | 1日の回り方を最適化。待ち時間の出し方は `wait_model` で `median` / `crowd_index` / `gbm` を選ぶ。出力 `plan_<park>.md`。**マルチパスは優先順位どおりに予約する**(ユーザーの決定。合計時間の最小化で選ぶと、パスの列は約10分なので必ずパスになるため)。候補から外すもの:スタンバイ平均が `ll_min_standby` 未満、戻り時刻+バッファ(`ll_buffer_min`)が `ll_use_until` に入らない、`ll_skip`。焼きなまし法で決めるのは、パスを使うタイミングとそれ以外の順番だけ。`--fast` / `--robust` / `--no-compare` |
 | `plan_DL.json` / `plan_DCA.json` | 入退園時刻、混雑指数、乗りたいもの(`multi_pass`/`standby` はどちらでも同じ扱い)、シングルパス、優先度、ショー、食事、パスの設定(`ll_use_until`:DL 23:00/DCA 21:00〈閉園22時の1時間前、ユーザー指定〉、`ll_buffer_min` 15、`ll_min_standby` 30、`ll_priority`、`ll_skip`、`ll_delay_high/mid`)、反復回数 |
-| `rides.json` | アトラクションの対応表(番号、座標、1時間の処理人数の推定、パス種別)。DL 47、DCA 25。TDL/TDSも入っているが未使用 |
+| `rides.json` | アトラクションの対応表(番号、座標、1時間の処理人数の推定、パス種別)。DL 47、DCA 25。TDL/TDSも入っているが未使用。`"skip_open_check": true` は営業判定から外す(城のウォークスルー)。**`"_not_analyzed"`** は Queue-Times に出るが分析しない項目(鉄道の駅・ショー・体験・シングルライダーの列。`kind`・`parent`)。ここに載っていない名前だけがダッシュボードで「未登録」になる。トップのキーを全部回すコードは `_` で始まるキーを飛ばすこと |
 | `calendar_extra.csv` | 日ごとのイベント・営業時間・天気(手で追記) |
 | `shows.csv` | ショーの時刻(`*` は毎日。公式アプリに合わせて手で直す) |
 | `parks.py` | パークごとのID・タイムゾーン。**まだどこからも使っていない**(東京対応の途中) |

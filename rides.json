@@ -1569,5 +1569,125 @@
    "ll_demand": "mid",
    "capacity_per_hour": 1200
   }
+ },
+ "_not_analyzed": {
+  "_about": "Queue-Times に出るが、待ち時間の分析・営業判定には使わない項目。kind: station=鉄道の駅 / show=ショー・展示 / experience=体験・グリーティング / single_rider=シングルライダーの列(parent=元のアトラクション番号)",
+  "DL": {
+   "692": {
+    "queue_times_id": 692,
+    "name": "ディズニーランド鉄道 ミッキーのトゥーンタウン駅",
+    "kind": "station",
+    "parent": "1",
+    "note": ""
+   },
+   "675": {
+    "queue_times_id": 675,
+    "name": "ディズニーランド鉄道 ニューオーリンズ・スクエア駅",
+    "kind": "station",
+    "parent": "1",
+    "note": ""
+   },
+   "676": {
+    "queue_times_id": 676,
+    "name": "ディズニーランド鉄道 トゥモローランド駅",
+    "kind": "station",
+    "parent": "1",
+    "note": ""
+   },
+   "17954": {
+    "queue_times_id": 17954,
+    "name": "ディズニーランド鉄道 メインストリートUSA駅",
+    "kind": "station",
+    "parent": "1",
+    "note": ""
+   },
+   "679": {
+    "queue_times_id": 679,
+    "name": "フロンティアランド・シューティング・エクスポジション",
+    "kind": "experience",
+    "note": "射的。待ちはほぼない"
+   },
+   "690": {
+    "queue_times_id": 690,
+    "name": "グレート・モーメント・ウィズ・ミスター・リンカーン",
+    "kind": "show",
+    "note": ""
+   },
+   "6711": {
+    "queue_times_id": 6711,
+    "name": "プリンセスに会う(ロイヤル・ホール)",
+    "kind": "experience",
+    "note": "グリーティング"
+   },
+   "14915": {
+    "queue_times_id": 14915,
+    "name": "オペラハウス:ウォルト・ディズニー ― ア・マジカル・ライフ",
+    "kind": "show",
+    "note": ""
+   },
+   "16627": {
+    "queue_times_id": 16627,
+    "name": "ピクサー短編上映(Pixar Short Film Spotlight)",
+    "kind": "show",
+    "note": ""
+   },
+   "10903": {
+    "queue_times_id": 10903,
+    "name": "ミレニアム・ファルコン シングルライダー",
+    "kind": "single_rider",
+    "parent": "20",
+    "note": "12/7の基礎分析でスタンバイとの差を見る"
+   },
+   "14326": {
+    "queue_times_id": 14326,
+    "name": "ティアナのバイユー・アドベンチャー シングルライダー",
+    "kind": "single_rider",
+    "parent": "16",
+    "note": "12/7の基礎分析でスタンバイとの差を見る"
+   }
+  },
+  "DCA": {
+   "7298": {
+    "queue_times_id": 7298,
+    "name": "ワールド・オブ・カラー(シーズン・オブ・ライト)",
+    "kind": "show",
+    "note": "夜のショー。夜間も営業中と出る"
+   },
+   "5557": {
+    "queue_times_id": 5557,
+    "name": "ピクサー・パル・ア・ラウンド(揺れないゴンドラ)",
+    "kind": "experience",
+    "parent": "17",
+    "note": "揺れるゴンドラ側(17)と別の列"
+   },
+   "10904": {
+    "queue_times_id": 10904,
+    "name": "ラジエーター・スプリングス・レーサー シングルライダー",
+    "kind": "single_rider",
+    "parent": "11",
+    "note": "12/7の基礎分析でスタンバイとの差を見る"
+   },
+   "10906": {
+    "queue_times_id": 10906,
+    "name": "インクレディコースター シングルライダー",
+    "kind": "single_rider",
+    "parent": "13",
+    "note": ""
+   },
+   "10905": {
+    "queue_times_id": 10905,
+    "name": "シリー・シンフォニー・スウィング シングルライダー",
+    "kind": "single_rider",
+    "parent": "19",
+    "note": ""
+   },
+   "10907": {
+    "queue_times_id": 10907,
+    "name": "ウェブ・スリンガーズ シングルライダー",
+    "kind": "single_rider",
+    "parent": "8",
+    "note": ""
+   }
+  }
  }
 }

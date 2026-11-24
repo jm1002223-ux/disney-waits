@@ -90,19 +90,45 @@ export function TabQuality({ d }: { d: ParkData }) {
         </p>
       </Card>
 
-      <Card title="アトラクション名の対応" note="rides.json(対応表)にない名前が記録に出ていないか">
+      <Card title="アトラクション名の対応" note="記録に出た名前が、すべてマスタ(rides.json)に登録されているか">
         {d.unmatched.length ? (
           <div className="space-y-2 text-xs">
             <p className="text-zinc-300">
               <AlertTriangle size={12} className="inline mr-1" color={C.warn} aria-hidden />
-              対応表にない名前が{d.unmatched.length}件あります。分析から漏れるので、新しいアトラクションなら rides.json に足す
+              マスタに未登録の名前が{d.unmatched.length}件あります。新しいアトラクションか名前の変更なので、rides.json に登録してください
             </p>
             <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-0.5 text-zinc-400">
               {d.unmatched.map(u => <li key={u.id}>{u.name}(ID {u.id})</li>)}
             </ul>
           </div>
-        ) : <p className="text-xs text-zinc-400"><Status ok={true}>対応表にない名前はありません</Status></p>}
+        ) : <p className="text-xs text-zinc-400"><Status ok={true}>すべてマスタに登録済み</Status></p>}
+        {!!d.not_analyzed?.length && (
+          <details className="text-xs">
+            <summary className="cursor-pointer text-zinc-400 hover:text-zinc-200">
+              うち分析対象外として登録済み:{d.not_analyzed.length}件(鉄道の駅・ショー・シングルライダーの列など)
+            </summary>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full">
+                <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
+                  {['種類', '名前', 'Queue-Times上の名前', 'メモ'].map(h => <th key={h} className="py-1.5 px-2 text-left font-normal whitespace-nowrap">{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {d.not_analyzed.map(o => (
+                    <tr key={o.id} className="border-b border-zinc-800/50">
+                      <td className="py-1.5 px-2 whitespace-nowrap text-zinc-400">{KIND_LABEL[o.kind] ?? o.kind}</td>
+                      <td className="py-1.5 px-2 text-zinc-200">{o.name}</td>
+                      <td className="py-1.5 px-2 text-zinc-500">{o.qt_name ?? '(まだ記録なし)'}</td>
+                      <td className="py-1.5 px-2 text-zinc-500">{o.note ?? ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        )}
       </Card>
     </div>
   )
 }
+
+const KIND_LABEL: Record<string, string> = { station: '鉄道の駅', show: 'ショー・展示', experience: '体験・グリーティング', single_rider: 'シングルライダーの列' }

@@ -10,6 +10,7 @@
 テーブル(SQLで自由に結合できる)
   fact_waits         待ち時間の記録 1行 = 1回の取得 × 1アトラクション(重複は除去済み)
   dim_ride           アトラクションの属性(rides.json):番号・名前・座標・処理人数・パス対象
+  dim_ride_other     分析対象外として登録済みの項目(rides.json の "_not_analyzed":鉄道の駅・ショー・シングルライダーの列など)
   dim_calendar       日付の属性:曜日・週末・祝日・ホリデー期間・営業時間(推定)・混雑指数・calendar_extra.csv の内容
   dim_show           ショーの時刻(shows.csv。日付が * の行は毎日)
 ビュー(よく使う集計)
@@ -77,9 +78,15 @@ def main():
     # 2) dim_ride
     rides = json.load(open("rides.json", encoding="utf-8"))
     rows = [(p, int(n), v["queue_times_id"], v["name"], v["x"], v["y"], v["ride_min"], v.get("capacity_per_hour"), v.get("lightning_lane"), v.get("ll_demand"))
-            for p, rs in rides.items() for n, v in rs.items()]
+            for p, rs in rides.items() if not p.startswith("_") for n, v in rs.items()]
     con.execute("CREATE OR REPLACE TABLE dim_ride(park VARCHAR, ride_no INTEGER, ride_id INTEGER, name VARCHAR, x DOUBLE, y DOUBLE, ride_min INTEGER, capacity_per_hour INTEGER, lightning_lane VARCHAR, ll_demand VARCHAR)")
     con.executemany("INSERT INTO dim_ride VALUES (?,?,?,?,?,?,?,?,?,?)", rows)
+    # 分析対象外として登録済みの項目(鉄道の駅・ショー・シングルライダーの列など)。rides.json の "_not_analyzed"
+    other = [(p, v["queue_times_id"], v["name"], v["kind"], int(v["parent"]) if v.get("parent") else None, v.get("note"))
+             for p, rs in rides.get("_not_analyzed", {}).items() if not p.startswith("_") for v in rs.values()]
+    con.execute("CREATE OR REPLACE TABLE dim_ride_other(park VARCHAR, ride_id INTEGER, name VARCHAR, kind VARCHAR, parent_no INTEGER, note VARCHAR)")
+    if other:
+        con.executemany("INSERT INTO dim_ride_other VALUES (?,?,?,?,?,?)", other)
 
     # 3) fact_waits(Parquetを直接参照するビュー。番号と15分枠を付ける)
     con.execute(f"""
@@ -177,7 +184,7 @@ def main():
     n = con.execute("SELECT count(*), count(DISTINCT date_local), min(date_local), max(date_local) FROM fact_waits").fetchone()
     print(f"DuckDB: {DB}  /  Parquet: {PQ}")
     print(f"  記録 {n[0]:,} 行、{n[1]} 日分({n[2]}〜{n[3]})")
-    for t in ["fact_waits", "dim_ride", "dim_calendar", "dim_show", "v_slot_profile", "v_daily_ride", "v_downtime_events", "v_queue_people"]:
+    for t in ["fact_waits", "dim_ride", "dim_ride_other", "dim_calendar", "dim_show", "v_slot_profile", "v_daily_ride", "v_downtime_events", "v_queue_people"]:
         try:
             print(f"  {t:18s} {con.execute(f'SELECT count(*) FROM {t}').fetchone()[0]:>10,} 行")
         except duckdb.Error as e:

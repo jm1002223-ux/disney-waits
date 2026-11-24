@@ -75,6 +75,7 @@ export type ParkData = {
   days: Day[]
   rides: Ride[]
   unmatched: { id: number; name: string }[]
+  not_analyzed?: { id: number; name: string; kind: 'station' | 'show' | 'experience' | 'single_rider'; parent: number | null; note: string | null; qt_name: string | null }[]
   attribution: { text: string; url: string }
   // 分析計画書に合わせた部分
   data_days: number

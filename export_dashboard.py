@@ -107,8 +107,13 @@ def export(con, park):
         })
     rides.sort(key=lambda r: -(r["avg"] or 0))
 
-    unmatched = rows(con, """SELECT DISTINCT ride_id AS id, name FROM fact_waits
-                             WHERE park = ? AND ride_no IS NULL ORDER BY name""", park)
+    # マスタ(rides.json)のどちらにもない名前だけを「未登録」とする。分析対象外として登録済みのものは別に出す
+    unmatched = rows(con, """SELECT DISTINCT w.ride_id AS id, w.name FROM fact_waits w
+                             WHERE w.park = ? AND w.ride_no IS NULL
+                               AND w.ride_id NOT IN (SELECT ride_id FROM dim_ride_other WHERE park = w.park) ORDER BY w.name""", park)
+    not_analyzed = rows(con, """SELECT o.ride_id AS id, o.name, o.kind, o.parent_no AS parent, o.note,
+                                       (SELECT ANY_VALUE(w.name) FROM fact_waits w WHERE w.park = o.park AND w.ride_id = o.ride_id) AS qt_name
+                                FROM dim_ride_other o WHERE o.park = ? ORDER BY o.kind, o.ride_id""", park)
     cov = [d["coverage"] for d in days if d["coverage"] is not None]
     return {
         "park": park, "park_name": PARK_NAME.get(park, park),
@@ -122,6 +127,7 @@ def export(con, park):
                   "median_gap": r1(d["median_gap"]), "max_gap": d["max_gap"]} for d in days],
         "rides": rides,
         "unmatched": unmatched,
+        "not_analyzed": not_analyzed,
         "attribution": {"text": "Powered by Queue-Times.com", "url": "https://queue-times.com/"},
     }
 
