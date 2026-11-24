@@ -32,7 +32,7 @@ export function TabPlan({ d }: { d: ParkData }) {
 
         <Card title="回り方" note={`待ち時間:${p.wait_source}`}>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs max-sm:[&_tr>*:nth-child(3)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
               <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
                 {['時刻', 'やること', '種類', '待ち', '徒歩', '備考'].map((h, i) => <th key={h} className={`py-2 px-2 font-normal ${i < 3 || i === 5 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>)}
               </tr></thead>
@@ -55,7 +55,7 @@ export function TabPlan({ d }: { d: ParkData }) {
         {p.multi_pass.length > 0 && (
           <Card title="マルチパスの取り方" note={`優先順位の順に予約。パスで乗り終えるのは ${p.ll_use_until} まで`}>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs max-sm:[&_tr>*:nth-child(4)]:hidden max-sm:[&_tr>*:nth-child(7)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
                 <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
                   {['順位', 'アトラクション', '判定', '予約', '戻り(見込み)', '乗る', 'その時刻のスタンバイ'].map((h, i) => <th key={h} className={`py-2 px-2 font-normal ${i === 1 || i === 2 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>)}
                 </tr></thead>

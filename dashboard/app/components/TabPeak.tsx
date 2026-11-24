@@ -34,7 +34,7 @@ export function TabPeak({ d }: { d: ParkData }) {
               {showNames.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
                 <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
                   {['アトラクション', '直前30分', 'ショー中', '変化', '日数'].map((h, i) => <th key={h} className={`py-2 px-2 font-normal ${i === 0 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>)}
                 </tr></thead>
@@ -66,7 +66,7 @@ export function TabPeak({ d }: { d: ParkData }) {
                 <tbody>
                   {occ.rides.map(r => (
                     <tr key={r.no}>
-                      <td className="sticky left-0 z-10 bg-[#141f1b] pr-3 py-0.5 whitespace-nowrap max-w-56 truncate text-zinc-400">{r.no}. {r.name}</td>
+                      <td className="sticky left-0 z-10 bg-[#141f1b] pr-3 py-0.5 whitespace-nowrap max-w-[8.5rem] sm:max-w-56 truncate text-zinc-400">{r.no}. {r.name}</td>
                       {occ.blocks.map(b => {
                         const v = r.share[String(b)]
                         return <td key={b} className="h-6 min-w-12 rounded-[4px] text-center tabular-nums text-zinc-100" style={{ background: rampColor(v, S_CUTS) }}>{pct(v)}</td>

@@ -58,7 +58,7 @@ function Q3({ d }: { d: ParkData }) {
         <span>学習した日数 <span className="text-zinc-100 tabular-nums">{m.days}日</span></span>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-xs">
+        <table className="w-full text-xs max-sm:[&_tr>*:nth-child(2)]:hidden max-sm:[&_tr>*:nth-child(4)]:hidden max-sm:[&_tr>*:nth-child(6)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
           <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
             {['アトラクション', '指数80の平均待ち', '指数100', '指数120', '指数+10あたり', 'R²'].map((h, i) => <th key={h} className={`py-2 px-2 font-normal ${i === 0 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>)}
           </tr></thead>
@@ -150,7 +150,7 @@ function Q4({ d }: { d: ParkData }) {
       {bt && (
         <div className="overflow-x-auto">
           <p className="text-xs text-zinc-400 mb-1">外れやすいアトラクション(上位10)</p>
-          <table className="w-full text-xs">
+          <table className="w-full text-xs max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
             <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
               {['アトラクション', '指数が分かっている', '曜日の平均で仮定', '指数なし', '比較した数'].map((h, i) => <th key={h} className={`py-2 px-2 font-normal ${i === 0 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>)}
             </tr></thead>

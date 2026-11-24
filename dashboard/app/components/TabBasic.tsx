@@ -58,7 +58,7 @@ function Heatmap({ rides, selected, onSelect }: { rides: Ride[]; selected: numbe
               const byH = new Map(r.hourly), sel = r.no === selected
               return (
                 <tr key={r.no} onClick={() => onSelect(r.no)} className="cursor-pointer group">
-                  <td className={`sticky left-0 z-10 bg-[#141f1b] pr-3 py-0.5 whitespace-nowrap max-w-56 truncate ${sel ? 'text-teal-300 font-semibold' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{r.no}. {r.name}</td>
+                  <td className={`sticky left-0 z-10 bg-[#141f1b] pr-3 py-0.5 whitespace-nowrap max-w-[8.5rem] sm:max-w-56 truncate ${sel ? 'text-teal-300 font-semibold' : 'text-zinc-400 group-hover:text-zinc-200'}`}>{r.no}. {r.name}</td>
                   {hours.map(h => {
                     const v = byH.get(h)
                     return <td key={h} className="w-7 h-5 rounded-[4px]" style={{ background: rampColor(v, HEAT_CUTS), outline: sel ? '1px solid rgba(45,212,191,0.35)' : undefined }}
@@ -166,7 +166,7 @@ export function TabBasic({ d }: { d: ParkData }) {
         minDays={7} first="12/7" dataDays={d.data_days} ready={!!d.q6} missing={insMissing} calc={ins}>
         {d.q6 && (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs max-sm:[&_tr>*:nth-child(3)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_tr>*:nth-child(6)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
               <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
                 {['順位', 'アトラクション', 'グループ', '開園30分', '11〜17時', '開園時に動いている確率', '朝に乗ると得する時間'].map((h, i) => <th key={h} className={`py-2 px-2 font-normal ${i === 1 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>)}
               </tr></thead>
@@ -198,7 +198,7 @@ export function TabBasic({ d }: { d: ParkData }) {
         minDays={7} first="12/7" dataDays={d.data_days} ready={!!d.q7} missing={insMissing} calc={ins}>
         {d.q7 && <>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs max-sm:[&_tr>*:nth-child(3)]:hidden max-sm:[&_tr>*:nth-child(5)]:hidden max-sm:[&_tr>*:nth-child(6)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
               <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
                 {['アトラクション', '1日に1回以上止まる確率', '1日あたりの回数', '平均の停止時間', '開園時に動いていない確率', '止まり始めが多い時間帯'].map((h, i) => <th key={h} className={`py-2 px-2 font-normal ${i === 0 ? 'text-left' : 'text-right'} whitespace-nowrap`}>{h}</th>)}
               </tr></thead>
@@ -229,7 +229,7 @@ export function TabBasic({ d }: { d: ParkData }) {
                 <tbody>
                   {d.q7.slice(0, 15).map(r => (
                     <tr key={r.no}>
-                      <td className="sticky left-0 z-10 bg-[#141f1b] pr-3 py-0.5 whitespace-nowrap max-w-56 truncate text-zinc-400">{r.no}. {r.name}</td>
+                      <td className="sticky left-0 z-10 bg-[#141f1b] pr-3 py-0.5 whitespace-nowrap max-w-[8.5rem] sm:max-w-56 truncate text-zinc-400">{r.no}. {r.name}</td>
                       {hours.map(h => {
                         const p = r.p_hour[String(h)]
                         return <td key={h} className="w-7 h-5 rounded-[4px]" style={{ background: rampColor(p, P_CUTS) }} title={`${r.name}・${h}時台:${pct(p)}`} />

@@ -231,7 +231,7 @@ export function Lab({ parks }: { parks: ParkData[] }) {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-lg font-bold text-white">Q1 の見せ方の比較(試作)</h1>
-          <Segmented value={code} options={parks.map(p => [p.park, p.park_name] as [string, string])} onChange={setCode} />
+          <Segmented value={code} options={parks.map(p => [p.park, p.park] as [string, string])} onChange={setCode} />
         </div>
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">
           データ {d.data_days}日分の参考値です。11/23の朝(7〜12時)は取れていないので、朝の狙い目はまだ出ません。待ち時間の多い上位{infos.length}施設を表示。

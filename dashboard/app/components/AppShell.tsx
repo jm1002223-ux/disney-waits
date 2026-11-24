@@ -11,20 +11,20 @@ export function AppShell({ updatedAt, children }: Props) {
     <div className="min-h-screen flex flex-col text-zinc-100">
       <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0d1f17]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shrink-0">
               <Clock3 size={13} className="text-white" />
             </div>
-            <span className="text-white/70 text-sm font-medium">Disney Waits</span>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border text-teal-400 bg-teal-500/10 border-teal-500/20">
+            <span className="whitespace-nowrap text-white/70 text-sm font-medium">Disney Waits</span>
+            <span className="hidden sm:inline text-xs font-semibold px-2.5 py-0.5 rounded-full border text-teal-400 bg-teal-500/10 border-teal-500/20">
               Private
             </span>
           </div>
-          {updatedAt && <span className="text-xs text-zinc-500">集計 {updatedAt}(日本時間)</span>}
+          {updatedAt && <span className="shrink-0 whitespace-nowrap text-[11px] sm:text-xs text-zinc-500">集計 <span className="sm:hidden">{updatedAt.slice(5).replace('-', '/')}</span><span className="hidden sm:inline">{updatedAt}(日本時間)</span></span>}
         </div>
       </header>
 
-      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 flex-1">{children}</main>
+      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1">{children}</main>
 
       <footer className="border-t border-white/[0.05]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">

@@ -25,3 +25,8 @@ body {
   background-size: 100% 100%, 72px 72px, 72px 72px;
   background-attachment: fixed;
 }
+
+/* 表の数字(「10分」など)は途中で折り返さない */
+td.tabular-nums {
+  white-space: nowrap;
+}

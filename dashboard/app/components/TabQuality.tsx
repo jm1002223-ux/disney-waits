@@ -6,8 +6,29 @@ import type { Criterion, ParkData } from '../lib/types'
 
 /** 品質の判定基準(計画書の表と同じ6項目) */
 export function CriteriaTable({ criteria, dataDays }: { criteria: Criterion[]; dataDays: number }) {
+  const judge = (c: Criterion) => c.ok == null
+    ? <Status ok={null}>{c.min_days && dataDays < c.min_days ? `${c.min_days}日分から` : `未計算(${c.source})`}</Status>
+    : <Status ok={c.ok} />
   return (
-    <div className="overflow-x-auto">
+    <>
+    {/* スマホ:1指標=1枚のカード(判定といまの値を先に) */}
+    <ul className="space-y-2 sm:hidden">
+      {criteria.map(c => (
+        <li key={c.id} className="rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-3 text-xs">
+          <div className="flex items-start justify-between gap-2">
+            <span className="font-semibold text-zinc-100">{c.name}</span>
+            <span className="shrink-0">{judge(c)}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-x-3 text-zinc-400">
+            <span>いま <span className="tabular-nums text-zinc-100">{c.value ?? '-'}</span></span>
+            <span>合格 {c.line}</span>
+          </div>
+          <p className="mt-1 text-zinc-500">{c.how}</p>
+          <p className="mt-0.5 text-zinc-500">下回ったら:{c.fallback}</p>
+        </li>
+      ))}
+    </ul>
+    <div className="hidden overflow-x-auto sm:block">
       <table className="w-full text-xs">
         <thead className="text-zinc-500">
           <tr className="border-b border-zinc-800">
@@ -23,17 +44,14 @@ export function CriteriaTable({ criteria, dataDays }: { criteria: Criterion[]; d
               <td className="py-2 px-2 text-zinc-400 min-w-48">{c.how}</td>
               <td className="py-2 px-2 text-zinc-300 whitespace-nowrap">{c.line}</td>
               <td className="py-2 px-2 text-zinc-100 tabular-nums whitespace-nowrap">{c.value ?? '-'}</td>
-              <td className="py-2 px-2 whitespace-nowrap">
-                {c.ok == null
-                  ? <Status ok={null}>{c.min_days && dataDays < c.min_days ? `${c.min_days}日分から` : `未計算(${c.source})`}</Status>
-                  : <Status ok={c.ok} />}
-              </td>
+              <td className="py-2 px-2 whitespace-nowrap">{judge(c)}</td>
               <td className="py-2 px-2 text-zinc-400 min-w-48">{c.fallback}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+    </>
   )
 }
 
@@ -55,7 +73,7 @@ export function TabQuality({ d }: { d: ParkData }) {
 
       <Card title="取得の抜け漏れと実行間隔" note="充足率 = 営業時間(推定)の15分枠のうち、記録がある割合">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-xs max-sm:[&_tr>*:nth-child(2)]:hidden max-sm:[&_tr>*:nth-child(3)]:hidden max-sm:[&_tr>*:nth-child(6)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
             <thead className="text-zinc-500">
               <tr className="border-b border-zinc-800">
                 {['日付', '営業(推定)', '記録のある15分枠', '充足率', '取得回数', '間隔(中央・最大)', '扱い'].map((h, i) => (
@@ -108,7 +126,7 @@ export function TabQuality({ d }: { d: ParkData }) {
               うち分析対象外として登録済み:{d.not_analyzed.length}件(鉄道の駅・ショー・シングルライダーの列など)
             </summary>
             <div className="mt-2 overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full max-sm:[&_tr>*:nth-child(3)]:hidden max-sm:[&_td:not(.text-right)]:whitespace-normal max-sm:[&_th]:whitespace-normal">
                 <thead className="text-zinc-500"><tr className="border-b border-zinc-800">
                   {['種類', '名前', 'Queue-Times上の名前', 'メモ'].map(h => <th key={h} className="py-1.5 px-2 text-left font-normal whitespace-nowrap">{h}</th>)}
                 </tr></thead>
