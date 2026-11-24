@@ -116,6 +116,6 @@ cd dashboard && npx vercel --prod   # 公開中のダッシュボードを更新
 
 ## 止めていること・残りの仕事
 - **東京対応(保留中)**:`parks.py` を各スクリプトに組み込む(タイムゾーン、日本の祝日、`--park` の選択肢にTDL/TDS、cronを `*/5 * * * *`、`plan_TDL.json`/`plan_TDS.json`、README)。ユーザーが再開を言うまで手を付けない
-- **ダッシュボード公開済み(2026-11-24)**:https://disney-waits-dashboard.vercel.app (Vercelプロジェクト `disney-waits-dashboard`、パスワードは `DASHBOARD_PASSWORD`〈Secret、ユーザーだけが知る〉)。パスワードなし・誤りは401、noindex を確認済み。**データは自動更新されない**(`export_dashboard.py` → `cd dashboard && npx vercel --prod --yes`)。`vercel link` がGitHub連携を勝手に付けたので `vercel git disconnect` で外した。リンクし直したら必ず外すこと(5分おきのデータコミットのたびにJSONなしで本番が上書きされる)
+- **ダッシュボード公開済み(2026-11-24)**:https://disney-waits-dashboard.vercel.app (Vercelプロジェクト `disney-waits-dashboard`、パスワードは `DASHBOARD_PASSWORD`〈Secret、ユーザーだけが知る〉)。パスワードなし・誤りは401、noindex を確認済み。**データは自動更新**:Actionsが1時間おきに `export_dashboard.py --out summary` で `summary/<park>.json` をコミットし、本番は GitHub の raw を5分ごとに読み直す(`dashboard/app/lib/load.ts`、読めなければ置いたときの `dashboard/data/`)。画面やコードを変えたときだけ `cd dashboard && npx vercel --prod --yes`。`vercel link` がGitHub連携を勝手に付けたので `vercel git disconnect` で外した。リンクし直したら必ず外すこと(5分おきのデータコミットのたびにJSONなしで本番が上書きされる)
 - 12/26で分析が終わったら、Actionsの `collect-wait-times` を「Disable workflow」で止める
 - 任意の候補(未依頼):Queue-Timesへ過去データの問い合わせメール(英語)
