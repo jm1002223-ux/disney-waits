@@ -45,7 +45,7 @@
 ## ファイルの役割
 | ファイル | 役割 |
 | --- | --- |
-| `.github/workflows/collect-waits.yml` | 1回の実行で約5時間50分、5分おきに `collect.py` を実行して `data/` をコミット。開始直後に `gh workflow run` で次の回を予約(`concurrency` で前の回が終わるまで待機)。起動は手動実行か、このファイルの変更のpush。`permissions: contents: write, actions: write`。止めるときは「Disable workflow」 |
+| `.github/workflows/collect-waits.yml` | 1回の実行で約5時間50分、5分おきに `collect.py` を実行して `data/` をコミット。開始直後に `gh workflow run` で次の回を予約(`concurrency` で前の回が終わるまで待機)。起動は手動実行か、このファイルの変更のpush。`permissions: contents: write, actions: write`。止めるときは「Disable workflow」。1時間おきに集計(`summary/`)と点検(`monitor.py`、異常ならIssue〈ラベル monitor〉を立て回復で閉じる)。終了時にも次の回を予約(保険)。`permissions` に `issues: write` |
 | `collect.py` | 両パークを取得し、`data/<park>/<現地日付>.csv` に追記。列:`fetched_utc, ride_id, ride_name, land, is_open, wait_time, last_updated`。営業判定は `rides.json` のアトラクションだけで行う(ショー・シングルライダーの列は数えない)。全部閉まっていればスキップ(ログ `park closed, skip`)。閉園直後は1回だけ記録。更新がなければスキップ(`no update since last fetch`)。ログの1行目は `アトラクション営業中 n/全体` |
 | (追加の出力) | ダッシュボード用の要約JSON:`model.py --backtest` → `models/<park>_backtest_summary.json`、`insights.py` → `insights/<park>_summary.json`(シルエット・ARI・時間帯別のシス調を含む)、`plan.py` → `plan_<park>_result.json`(**`plan_<park>.json` は入力の設定なので別名**)。計算方法は変えていない |
 | `analyze.py` | 15分ごとの中央値・90%点 → `profiles/`。`--park`、`--from/--to`、`--days all/weekday/weekend` |
@@ -60,6 +60,8 @@
 | `shows.csv` | ショーの時刻(`*` は毎日。公式アプリに合わせて手で直す) |
 | `parks.py` | パークごとのID・タイムゾーン。**まだどこからも使っていない**(東京対応の途中) |
 | `export_dashboard.py` | ダッシュボード用の集計を `dashboard/data/<park>.json` に書き出す。**分析計画書の構成どおり**:品質(15分枠の充足率・実行間隔・名前の対応)、Q1(15分プロファイル)、Q2(model.py と同じ関数で、感謝祭の週/クリスマス前を基準に含める・除くの4通り)、Q3〜Q7(models/・insights/ の出力を読む)、Q8(ノート⑤⑦と同じSQL)、品質の判定基準6項目、最終プラン(`plan_<park>_result.json`)、各出力の計算日時と日数 |
+| `monitor.py` | 収集の点検(現地9〜21時のみ):今日のCSVの最後の記録が30分以内か、最後の記録でアトラクションが1つ以上営業中か。問題があれば終了コード1。Actionsが1時間おきに実行 |
+| `summary/` | Actionsが書き出すダッシュボード用の集計(`DL.json`・`DCA.json`)。手で編集しない |
 | `dashboard/` | ダッシュボード(Next.js)。タブは計画書の成果物の5つ(①品質 11/30、②基礎分析 12/7、③予測と分類 12/14、④繁忙期 12/21、⑤最終プラン 12/26)。各Qに計画書の問い・手法・必要日数・初回日を表示し、日数不足は「参考値」、出力がなければ実行するコマンドを表示。`app/page.tsx` がサーバー側で `data/*.json` を読む(`public/` には置かない)。`DASHBOARD_DATA_DIR` を指定するとその集計を読み「サンプル表示中」の帯を出す。`data/*.json` は git 管理外、`.vercelignore` では除外しない。手元は `npm run dev`(パスワードなし) |
 | `analysis.ipynb` | 9つの分析とSQLの自由欄。日本語フォントは自動で選ぶ |
 | `README.md` | 日本語の全体説明 |
