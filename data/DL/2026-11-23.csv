@@ -6727,3 +6727,61 @@ fetched_utc,ride_id,ride_name,land,is_open,wait_time,last_updated
 2026-11-24T05:44:09Z,675,Disneyland Railroad - New Orleans Square,,0,0,2026-11-24T05:40:36.000Z
 2026-11-24T05:44:09Z,676,Disneyland Railroad - Tomorrowland,,0,0,2026-11-24T05:40:36.000Z
 2026-11-24T05:44:09Z,17954,"Disneyland Railroad Main Street, U.S.A. Station",,0,0,2026-11-24T05:40:36.000Z
+2026-11-24T05:49:09Z,12428,Adventureland Treehouse inspired by Walt Disney’s Swiss Family Robinson,Adventureland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,326,Indiana Jones™ Adventure,Adventureland,1,45,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,296,Jungle Cruise,Adventureland,1,10,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,288,Walt Disney's Enchanted Tiki Room,Adventureland,1,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,304,Davy Crockett's Explorer Canoes,Bayou Country,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,306,The Many Adventures of Winnie the Pooh,Bayou Country,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,14168,Tiana's Bayou Adventure,Bayou Country,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,14326,Tiana's Bayou Adventure Single Rider,Bayou Country,1,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,5517,"""it's a small world"" Holiday",Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,285,Alice in Wonderland,Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,303,Casey Jr. Circus Train,Fantasyland,1,10,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,275,Dumbo the Flying Elephant,Fantasyland,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,277,King Arthur Carrousel,Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,278,Mad Tea Party,Fantasyland,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,279,Matterhorn Bobsleds,Fantasyland,1,15,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,6711,Meet Disney Princesses at Royal Hall,Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,280,Mr. Toad's Wild Ride,Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,281,Peter Pan's Flight,Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,282,Pinocchio's Daring Journey,Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,687,Sleeping Beauty Castle Walkthrough,Fantasyland,1,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,283,Snow White's Enchanted Wish,Fantasyland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,305,Storybook Land Canal Boats,Fantasyland,1,15,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,323,Big Thunder Mountain Railroad,Frontierland,1,25,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,679,Frontierland Shootin' Exposition,Frontierland,1,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,456,Mark Twain Riverboat,Frontierland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,331,Pirate's Lair on Tom Sawyer Island,Frontierland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,328,Sailing Ship Columbia,Frontierland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,674,Disneyland Railroad,Main Street U.S.A,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,690,Great Moments with Mr. Lincoln,Main Street U.S.A,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,686,Main Street Cinema,Main Street U.S.A,1,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,691,Main Street Vehicles,Main Street U.S.A,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,14915,Opera House - Walt Disney - A Magical Life,Main Street U.S.A,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,695,The Disney Gallery,Main Street U.S.A,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,14923,Walt Disney - A Magical Life,Main Street U.S.A,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,324,Chip 'n' Dale's GADGETcoaster,Mickey's Toontown,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,13814,Donald's Duck Pond,Mickey's Toontown,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,11980,Goofy's How-to-Play Yard,Mickey's Toontown,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,11526,Mickey & Minnie's Runaway Railway,Mickey's Toontown,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,709,Mickey's House and Meet Mickey Mouse,Mickey's Toontown,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,684,Minnie's House,Mickey's Toontown,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,332,Roger Rabbit's Car Toon Spin,Mickey's Toontown,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,325,Haunted Mansion Holiday,New Orleans Square,1,20,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,289,Pirates of the Caribbean,New Orleans Square,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,6339,Millennium Falcon: Smugglers Run,Star Wars: Galaxy's Edge,1,10,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,10903,Millennium Falcon: Smugglers Run Single Rider,Star Wars: Galaxy's Edge,1,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,6340,Star Wars: Rise of the Resistance,Star Wars: Galaxy's Edge,1,45,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,287,Astro Orbitor,Tomorrowland,1,10,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,317,Autopia,Tomorrowland,1,10,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,273,Buzz Lightyear Astro Blasters,Tomorrowland,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,274,Disneyland Monorail,Tomorrowland,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,276,Finding Nemo Submarine Voyage,Tomorrowland,1,5,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,16627,Pixar Short Film Spotlight,Tomorrowland,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,284,Space Mountain,Tomorrowland,1,35,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,286,Star Tours - The Adventures Continue,Tomorrowland,1,10,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,692,Disneyland Railroad - Mickey's Toontown,,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,675,Disneyland Railroad - New Orleans Square,,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,676,Disneyland Railroad - Tomorrowland,,0,0,2026-11-24T05:45:40.000Z
+2026-11-24T05:49:09Z,17954,"Disneyland Railroad Main Street, U.S.A. Station",,0,0,2026-11-24T05:45:40.000Z
