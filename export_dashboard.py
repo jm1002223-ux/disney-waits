@@ -2,6 +2,7 @@
 
   python warehouse.py          # 先にデータベースを作り直す
   python export_dashboard.py   # → dashboard/data/DL.json, DCA.json
+  python export_dashboard.py --out summary   # GitHub Actions が1時間おきに使う(公開中のダッシュボードが読む)
 
 書き出すのは集計値だけ(生データの行は入れない)。
 Powered by Queue-Times.com (https://queue-times.com/)
@@ -291,13 +292,14 @@ def main():
     if not os.path.exists(DB):
         sys.exit("warehouse/ がありません。先に python warehouse.py を実行してください")
     con = duckdb.connect(DB, read_only=True)
-    os.makedirs(OUT, exist_ok=True)
+    out = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else OUT
+    os.makedirs(out, exist_ok=True)
     for park in ("DL", "DCA"):
         data = export(con, park)
         if data is None:
             print(f"[{park}] データなし、スキップ"); continue
         data.update(analysis(con, park, data))
-        path = os.path.join(OUT, f"{park}.json")
+        path = os.path.join(out, f"{park}.json")
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
         print(f"[{park}] {data['range']['days']}日分・アトラクション{len(data['rides'])} → {path}({os.path.getsize(path) // 1024}KB)")

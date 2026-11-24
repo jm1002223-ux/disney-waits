@@ -2,17 +2,20 @@ name: collect-wait-times
 
 # GitHub の定期実行(schedule)がこのアカウントで起動しないため、自分で次の回を予約する方式にしている。
 # 1回の実行で約5時間50分動き、その間5分おきに collect.py を実行して data/ を保存する。
-# 開始直後に次の回を予約する(workflow_dispatch)。同時には1つしか動かないので、次の回は今の回が終わるまで待つ。
+# 1時間おきに、ダッシュボード用の集計(summary/)を書き出し、収集が止まっていないかを点検する(monitor.py)。
+#   異常があれば Issue(ラベル monitor)を立てる。回復したら自動で閉じる。
+# 次の回は開始直後と終了時の2回予約する(同時には1つしか動かず、待機中も1つだけ残る)。
 # 止めるとき:Actions の画面で「Disable workflow」。
 on:
   workflow_dispatch: {}       # 手動実行ボタン(と、自分自身による次の回の予約)
   push:
     branches: [main]
-    paths: [".github/workflows/collect-waits.yml"]   # この設定を変えたときに1回目を起動する
+    paths: [".github/workflows/collect-waits.yml"]   # この設定を変えたときに起動する
 
 permissions:
-  contents: write   # data/ の保存
+  contents: write   # data/・summary/ の保存
   actions: write    # 次の回の予約
+  issues: write     # 異常の通知
 
 concurrency:
   group: collect
@@ -22,29 +25,64 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONIOENCODING: utf-8
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Schedule next run
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: gh workflow run collect-waits.yml --ref main --repo "$GITHUB_REPOSITORY"
+      - name: Install duckdb (集計用。失敗しても収集は続ける)
+        run: pip install --quiet "duckdb>=1.1" || echo "::warning::duckdb のインストールに失敗(集計はスキップ)"
       - name: Collect every 5 minutes (about 5h50m)
         run: |
           git config user.name "wait-time-bot"
           git config user.email "wait-time-bot@users.noreply.github.com"
+
+          push() {  # コミットを送る。失敗しても次の回で再試行
+            git push --quiet || { git pull --rebase --quiet && git push --quiet; } || echo "::warning::push failed"
+          }
+
+          hourly() {
+            # 1) ダッシュボード用の集計(公開中のダッシュボードが5分ごとに読みにくる)
+            if python warehouse.py > /dev/null && python export_dashboard.py --out summary; then
+              git add summary
+              git diff --cached --quiet || { git commit --quiet -m "summary: $(date -u +%Y-%m-%dT%H:%MZ)"; push; }
+            else
+              echo "::warning::集計の書き出しに失敗"
+            fi
+            # 2) 収集の点検。異常なら Issue を立て(続いていればコメント)、回復したら閉じる
+            open=$(gh issue list --label monitor --state open --json number -q '.[0].number' 2>/dev/null || true)
+            if out=$(python monitor.py); then
+              [ -n "$open" ] && gh issue close "$open" --comment "回復を確認しました($(date -u +%Y-%m-%dT%H:%MZ))" || true
+            else
+              echo "::error::$out"
+              body=$(printf '%s\n\n点検時刻: %s\n実行: %s/%s/actions/runs/%s' "$out" "$(date -u +%Y-%m-%dT%H:%MZ)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+              if [ -n "$open" ]; then
+                gh issue comment "$open" --body "$body" || true
+              else
+                gh label create monitor --color B60205 --description "収集の監視" --force > /dev/null 2>&1 || true
+                gh issue create --title "収集の異常(monitor.py)" --label monitor --body "$body" || true
+              fi
+            fi
+          }
+
           end=$(( $(date +%s) + 350*60 ))
+          i=0
           while [ "$(date +%s)" -lt "$end" ]; do
             start=$(date +%s)
             git pull --rebase --quiet || git rebase --abort || true
-            python collect.py || echo "collect.py failed (次の回で再試行)"
+            python collect.py || echo "::warning::collect.py failed (次の回で再試行)"
             git add data
-            if ! git diff --cached --quiet; then
-              git commit --quiet -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"
-              git push --quiet || { git pull --rebase --quiet && git push --quiet; } || echo "push failed (次の回で再試行)"
-            fi
+            git diff --cached --quiet || { git commit --quiet -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"; push; }
+            [ $(( i % 12 )) -eq 0 ] && hourly
+            i=$(( i + 1 ))
             left=$(( 300 - ($(date +%s) - start) ))
             [ "$left" -gt 0 ] && sleep "$left"
           done
+      - name: Schedule next run again (予約が消えていた場合の保険)
+        if: always()
+        run: gh workflow run collect-waits.yml --ref main --repo "$GITHUB_REPOSITORY"
