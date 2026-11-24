@@ -244,6 +244,7 @@
   },
   "27": {
    "queue_times_id": 687,
+   "skip_open_check": true,
    "name": "眠りの森の美女の城ウォークスルー",
    "x": 400,
    "y": -482,

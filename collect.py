@@ -13,11 +13,12 @@ FIELDS = ["fetched_utc", "ride_id", "ride_name", "land", "is_open", "wait_time",
 
 def attraction_ids():
     """営業中かどうかの判定に使うアトラクション(rides.json に載っているもの)。
-    ショー(World of Color など)やシングルライダーの列は夜間も「営業中」になることがあるので数えない。"""
+    ショー(World of Color など)やシングルライダーの列は夜間も「営業中」になることがあるので数えない。
+    rides.json で "skip_open_check": true のもの(城のウォークスルー:夜間も営業中・0分と出る)も数えない。"""
     try:
         with open("rides.json", encoding="utf-8") as f:
             d = json.load(f)
-        return {code: {str(v["queue_times_id"]) for v in d.get(code, {}).values() if v.get("queue_times_id")} for code in PARKS}
+        return {code: {str(v["queue_times_id"]) for v in d.get(code, {}).values() if v.get("queue_times_id") and not v.get("skip_open_check")} for code in PARKS}
     except Exception as e:  # 読めないときは全件で判定(従来どおり)
         print(f"rides.json を読めないため全件で判定: {e}", file=sys.stderr)
         return {}
