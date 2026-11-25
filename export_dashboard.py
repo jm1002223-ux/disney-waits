@@ -244,7 +244,7 @@ def analysis(con, park, base):
     cov = base["range"]["coverage"]
     criteria = [
         {"id": "coverage", "name": "データの充足率", "how": "営業時間の15分枠のうち、記録がある割合", "line": "90%以上",
-         "value": None if cov is None else f"{cov:.0%}", "ok": None if cov is None else cov >= 0.9,
+         "value": None if cov is None else f"{cov:.1%}", "ok": None if cov is None else cov >= 0.9,
          "fallback": "実行ログを確認。大きな欠けの日は分析から外す", "source": "export_dashboard.py"},
         {"id": "error", "name": "待ち時間予測の誤差", "how": "--backtest の平均誤差(混雑指数が分かっている場合、人気アトラクション)", "line": "±10分以内",
          "value": None if not bt else f"±{bt['top']['known']:.1f}分", "ok": None if not bt else bt["top"]["known"] <= 10,
