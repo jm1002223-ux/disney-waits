@@ -23,6 +23,8 @@ from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo("America/Los_Angeles")
 SLOT = 15
+# 現地0:00〜4:59 の記録は分析しない(閉園直後の記録や城のウォークスルーが翌日の1日分に数えられるため。data/ には残る)
+DAY_START = 5
 BLOCKS = [(8, 10), (10, 12), (12, 14), (14, 16), (16, 18), (18, 20), (20, 22), (22, 24)]
 
 
@@ -47,6 +49,8 @@ def load(park):
                 if not k:
                     continue
                 ts = datetime.fromisoformat(r["fetched_utc"].replace("Z", "+00:00")).astimezone(TZ)
+                if ts.hour < DAY_START:
+                    continue
                 key = (k, r["fetched_utc"])
                 if key in seen:
                     continue

@@ -28,6 +28,8 @@ from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo("America/Los_Angeles")
 SLOT = 15
+# 現地0:00〜4:59 の記録は分析しない(閉園直後の記録や城のウォークスルーが翌日の1日分に数えられるため。data/ には残る)
+DAY_START = 5
 
 
 def load(park):
@@ -43,6 +45,8 @@ def load(park):
                     continue
                 seen.add(key)
                 ts = datetime.fromisoformat((r["last_updated"] or r["fetched_utc"]).replace("Z", "+00:00")).astimezone(TZ)
+                if ts.hour < DAY_START:
+                    continue
                 day = ts.date().isoformat()
                 slot = (ts.hour * 60 + ts.minute) // SLOT * SLOT
                 obs[r["ride_id"]][day][slot].append(float(r["wait_time"] or 0))

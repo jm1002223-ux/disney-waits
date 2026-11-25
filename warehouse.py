@@ -97,6 +97,7 @@ def main():
            hour(w.ts_local) AS hour_local, w.is_open, CASE WHEN w.is_open = 1 THEN w.wait_time END AS wait_time
     FROM read_parquet('{PQ}/**/*.parquet', hive_partitioning = true) w
     LEFT JOIN dim_ride r ON r.park = w.park AND r.ride_id = w.ride_id
+    WHERE hour(w.ts_local) >= 5   -- 現地0:00〜4:59 は分析しない(閉園直後の記録が翌日に数えられるため)
     """)
 
     # 4) dim_calendar(営業時間の推定・混雑指数・祝日・追加情報)

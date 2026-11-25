@@ -45,7 +45,7 @@
 ## ファイルの役割
 | ファイル | 役割 |
 | --- | --- |
-| `.github/workflows/collect-waits.yml` | 1回の実行で約5時間50分、5分おきに `collect.py` を実行して `data/` をコミット。開始直後に `gh workflow run` で次の回を予約(`concurrency` で前の回が終わるまで待機)。起動は手動実行か、このファイルの変更のpush。`permissions: contents: write, actions: write`。止めるときは「Disable workflow」。1時間おきに集計(`summary/`)と点検(`monitor.py`、異常ならIssue〈ラベル monitor〉を立て回復で閉じる)。終了時にも次の回を予約(保険)。`permissions` に `issues: write` |
+| `.github/workflows/collect-waits.yml` | 1回の実行で約5時間50分、5分おきに `collect.py` を実行して `data/` をコミット。開始直後に `gh workflow run` で次の回を予約(`concurrency` で前の回が終わるまで待機)。起動は手動実行か、このファイルの変更のpush。`permissions: contents: write, actions: write`。止めるときは「Disable workflow」。1時間おきに `model.py`・`model.py --backtest`・`insights.py`(日数不足なら止まるだけ。出力はコミットしない)→ 集計(`summary/`)と点検(`monitor.py`、異常ならIssue〈ラベル monitor〉を立て回復で閉じる)。終了時にも次の回を予約(保険)。`permissions` に `issues: write` |
 | `collect.py` | 両パークを取得し、`data/<park>/<現地日付>.csv` に追記。列:`fetched_utc, ride_id, ride_name, land, is_open, wait_time, last_updated`。営業判定は `rides.json` のアトラクションだけで行う(ショー・シングルライダーの列は数えない)。全部閉まっていればスキップ(ログ `park closed, skip`)。閉園直後は1回だけ記録。更新がなければスキップ(`no update since last fetch`)。ログの1行目は `アトラクション営業中 n/全体` |
 | (追加の出力) | ダッシュボード用の要約JSON:`model.py --backtest` → `models/<park>_backtest_summary.json`、`insights.py` → `insights/<park>_summary.json`(シルエット・ARI・時間帯別のシス調を含む)、`plan.py` → `plan_<park>_result.json`(**`plan_<park>.json` は入力の設定なので別名**)。計算方法は変えていない |
 | `analyze.py` | 15分ごとの中央値・90%点 → `profiles/`。`--park`、`--from/--to`、`--days all/weekday/weekend` |
@@ -110,6 +110,7 @@ cd dashboard && npx vercel --prod   # 公開中のダッシュボードを更新
 - 表示待ち時間は実際より長めのことが多い。順番の比較には使えるが、分数は余裕を持って読む
 - ライトニングレーンの戻り時刻は取れないので、プランは見込み値を使う。処理人数も推定値
 - シス調は5分未満の停止を数え落とす
+- **現地0:00〜4:59 の記録は分析しない**(2026-11-25)。`model.py`・`insights.py`・`analyze.py` の `DAY_START = 5` と `warehouse.py` の `fact_waits`(`WHERE hour(ts_local) >= 5`)。閉園直後の1回の記録や城のウォークスルーが、翌日の1日分として数えられて混雑指数を壊していたため(例:DL 11/25 が指数37の「空いた日」に)。`data/` には残る。年越しなど0時以降も営業する日を分析するなら見直す
 - **混雑指数の定義が2つある(既存の不一致)**:`model.py` は「rides.json の fallback_peak ≥ 40 のアトラクション」、`warehouse.py` の `dim_calendar.crowd_index`(ノート①・gbm.py が使う)は「実データの期間平均 ≥ 40」。ダッシュボードのQ2は予測・プランと揃えるため model.py 側。**決定(2026-11-24、ユーザー承認)**:12/7までは model.py 側のまま。12/7〜12/14に実データで3案(①model.py の推定ピーク≥40、②warehouse の実平均≥40、③最初の1週間の実データで選んで固定)を `--backtest` で比べ、計画書の判定基準(人気アトラクションの誤差、「曜日の平均で仮定」<「指数なし」)が良い方に統一する。比較用の切り替えはその時に model.py へ足す
 - アトラクションの休止や名前の変更があると、`rides.json` にない名前が記録に出る。月曜の作業で確認する
 - パスのルール:マルチパスは対象ごとに1日1回、次の予約は使った後か予約から2時間後。ライズ・オブ・ザ・レジスタンスとラジエーター・スプリングス・レーサーはシングルパスのみ(1日1回、両方買える)。早期入園は2026/1/5で終了

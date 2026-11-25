@@ -2,7 +2,7 @@ name: collect-wait-times
 
 # GitHub の定期実行(schedule)がこのアカウントで起動しないため、自分で次の回を予約する方式にしている。
 # 1回の実行で約5時間50分動き、その間5分おきに collect.py を実行して data/ を保存する。
-# 1時間おきに、ダッシュボード用の集計(summary/)を書き出し、収集が止まっていないかを点検する(monitor.py)。
+# 1時間おきに、予測・分類(model.py・insights.py)を計算してダッシュボード用の集計(summary/)を書き出し、収集が止まっていないかを点検する(monitor.py)。
 #   異常があれば Issue(ラベル monitor)を立てる。回復したら自動で閉じる。
 # 次の回は開始直後と終了時の2回予約する(同時には1つしか動かず、待機中も1つだけ残る)。
 # 止めるとき:Actions の画面で「Disable workflow」。
@@ -48,6 +48,13 @@ jobs:
 
           hourly() {
             # 1) ダッシュボード用の集計(公開中のダッシュボードが5分ごとに読みにくる)
+            #    先に予測・分類(Q3〜Q7)を計算する。日数が足りない間は各スクリプトが止まるだけで、集計は続ける
+            #    出力(models/・insights/)はこの実行の中だけで使い、コミットしない
+            for p in DL DCA; do
+              timeout 300 python model.py --park "$p" > /dev/null 2>&1 || true
+              timeout 300 python model.py --park "$p" --backtest > /dev/null 2>&1 || true
+              timeout 600 python insights.py --park "$p" > /dev/null 2>&1 || true
+            done
             if python warehouse.py > /dev/null && python export_dashboard.py --out summary; then
               git add summary
               git diff --cached --quiet || { git commit --quiet -m "summary: $(date -u +%Y-%m-%dT%H:%MZ)"; push; }
