@@ -21,10 +21,11 @@ from collections import defaultdict, Counter
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import cleaning
+
 TZ = ZoneInfo("America/Los_Angeles")
 SLOT = 15
-# 現地0:00〜4:59 の記録は分析しない(閉園直後の記録や城のウォークスルーが翌日の1日分に数えられるため。data/ には残る)
-DAY_START = 5
+# 分析に使わない記録(現地0〜5時・閉園後)の決まりは cleaning.py
 BLOCKS = [(8, 10), (10, 12), (12, 14), (14, 16), (16, 18), (18, 20), (20, 22), (22, 24)]
 
 
@@ -39,6 +40,7 @@ def std(x):
 def load(park):
     rides = json.load(open("rides.json", encoding="utf-8"))[park]
     by_qid = {str(v["queue_times_id"]): k for k, v in rides.items()}
+    keep = cleaning.keeper(park)
     W = defaultdict(lambda: defaultdict(dict))   # ride -> day -> slot -> 待ち(営業中のみ)
     O = defaultdict(lambda: defaultdict(dict))   # ride -> day -> slot -> 1/0(運営中か)
     seen = set()
@@ -49,7 +51,7 @@ def load(park):
                 if not k:
                     continue
                 ts = datetime.fromisoformat(r["fetched_utc"].replace("Z", "+00:00")).astimezone(TZ)
-                if ts.hour < DAY_START:
+                if not keep(ts):
                     continue
                 key = (k, r["fetched_utc"])
                 if key in seen:

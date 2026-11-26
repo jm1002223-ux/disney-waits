@@ -26,6 +26,8 @@ from datetime import date, timedelta
 
 import duckdb
 
+import cleaning
+
 DB = "warehouse/disney.duckdb"
 PQ = "warehouse/parquet/waits"
 
@@ -88,6 +90,12 @@ def main():
     if other:
         con.executemany("INSERT INTO dim_ride_other VALUES (?,?,?,?,?,?)", other)
 
+    # 分析に使う時間の終わり(閉園の15分後)。決まりは cleaning.py
+    con.execute("CREATE OR REPLACE TABLE park_close(park VARCHAR, date_local DATE, cutoff TIMESTAMP)")
+    cut = [(p, d, ts.replace(tzinfo=None)) for p in sorted({r[0] for r in con.execute('SELECT DISTINCT park FROM clean').fetchall()}) for d, ts in cleaning.close_cutoffs(p).items()]
+    if cut:
+        con.executemany("INSERT INTO park_close VALUES (?,?,?)", cut)
+
     # 3) fact_waits(Parquetを直接参照するビュー。番号と15分枠を付ける)
     con.execute(f"""
     CREATE OR REPLACE VIEW fact_waits AS
@@ -97,7 +105,8 @@ def main():
            hour(w.ts_local) AS hour_local, w.is_open, CASE WHEN w.is_open = 1 THEN w.wait_time END AS wait_time
     FROM read_parquet('{PQ}/**/*.parquet', hive_partitioning = true) w
     LEFT JOIN dim_ride r ON r.park = w.park AND r.ride_id = w.ride_id
-    WHERE hour(w.ts_local) >= 5   -- 現地0:00〜4:59 は分析しない(閉園直後の記録が翌日に数えられるため)
+    LEFT JOIN park_close c ON c.park = w.park AND c.date_local = CAST(w.ts_local AS DATE)
+    WHERE hour(w.ts_local) >= 5 AND (c.cutoff IS NULL OR w.ts_local <= c.cutoff)   -- 現地0〜5時・閉園後は使わない(cleaning.py)
     """)
 
     # 4) dim_calendar(営業時間の推定・混雑指数・祝日・追加情報)
