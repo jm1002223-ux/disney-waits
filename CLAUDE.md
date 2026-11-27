@@ -55,11 +55,11 @@
 | `gbm.py` | 勾配ブースティングと他の方式を比較(A〜Eの5方式、日単位のGroupKFold、並べ替え重要度)。`models/<park>_gbm.joblib` を保存。`--fast` |
 | `plan.py` | 1日の回り方を最適化。待ち時間の出し方は `wait_model` で `median` / `crowd_index` / `gbm` を選ぶ。出力 `plan_<park>.md`。**マルチパスは優先順位どおりに予約する**(ユーザーの決定。合計時間の最小化で選ぶと、パスの列は約10分なので必ずパスになるため)。候補から外すもの:スタンバイ平均が `ll_min_standby` 未満、戻り時刻+バッファ(`ll_buffer_min`)が `ll_use_until` に入らない、`ll_skip`。焼きなまし法で決めるのは、パスを使うタイミングとそれ以外の順番だけ。`--fast` / `--robust` / `--no-compare` |
 | `plan_DL.json` / `plan_DCA.json` | 入退園時刻、混雑指数、乗りたいもの(`multi_pass`/`standby` はどちらでも同じ扱い)、シングルパス、優先度、ショー、食事、パスの設定(`ll_use_until`:DL 23:00/DCA 21:00〈閉園22時の1時間前、ユーザー指定〉、`ll_buffer_min` 15、`ll_min_standby` 30、`ll_priority`、`ll_skip`、`ll_delay_high/mid`)、反復回数 |
-| `rides.json` | アトラクションの対応表(番号、座標、1時間の処理人数の推定、パス種別)。DL 47、DCA 25。TDL/TDSも入っているが未使用。`"skip_open_check": true` は営業判定から外す(城のウォークスルー)。**`"_not_analyzed"`** は Queue-Times に出るが分析しない項目(鉄道の駅・ショー・体験・シングルライダーの列。`kind`・`parent`)。ここに載っていない名前だけがダッシュボードで「未登録」になる。トップのキーを全部回すコードは `_` で始まるキーを飛ばすこと |
+| `rides.json` | アトラクションの対応表(番号、座標、1時間の処理人数の推定、パス種別)。DL 47、DCA 25、TDL 37、TDS 33(東京は 2026-11-27 に Queue-Times と全件一致を確認)。`"skip_open_check": true` は営業判定から外す(城のウォークスルー)。**`"_not_analyzed"`** は Queue-Times に出るが分析しない項目(鉄道の駅・ショー・体験・シングルライダーの列。`kind`・`parent`)。ここに載っていない名前だけがダッシュボードで「未登録」になる。トップのキーを全部回すコードは `_` で始まるキーを飛ばすこと |
 | `calendar_extra.csv` | 日ごとのイベント・営業時間・天気(手で追記) |
 | `shows.csv` | ショーの時刻(`*` は毎日。公式アプリに合わせて手で直す) |
 | `cleaning.py` | 分析に使わない記録の決まり(現地0〜5時、閉園後)。`keeper(park)` / `close_cutoffs(park)` |
-| `parks.py` | パークごとのID・タイムゾーン。**まだどこからも使っていない**(東京対応の途中) |
+| `parks.py` | **パークの共通設定**(Queue-TimesのID、タイムゾーン、国、日本語名、monitor の点検時間 `check_hours`)と祝日(`us_holidays`・`jp_holidays`〈振替・国民の休日を含む〉・`holidays(park, years)`)。collect・monitor・cleaning・model・insights・analyze・gbm・warehouse・export_dashboard が使う。パークを足すときはここに1行 |
 | `export_dashboard.py` | ダッシュボード用の集計を `dashboard/data/<park>.json` に書き出す。**分析計画書の構成どおり**:品質(15分枠の充足率・実行間隔・名前の対応)、Q1(15分プロファイル)、Q2(model.py と同じ関数で、感謝祭の週/クリスマス前を基準に含める・除くの4通り)、Q3〜Q7(models/・insights/ の出力を読む)、Q8(ノート⑤⑦と同じSQL)、品質の判定基準6項目、最終プラン(`plan_<park>_result.json`)、各出力の計算日時と日数 |
 | `monitor.py` | 収集の点検(現地9〜21時のみ):今日のCSVの最後の記録が30分以内か、最後の記録でアトラクションが1つ以上営業中か。問題があれば終了コード1。Actionsが1時間おきに実行 |
 | `summary/` | Actionsが書き出すダッシュボード用の集計(`DL.json`・`DCA.json`)。手で編集しない |
@@ -117,7 +117,7 @@ cd dashboard && npx vercel --prod   # 公開中のダッシュボードを更新
 - パスのルール:マルチパスは対象ごとに1日1回、次の予約は使った後か予約から2時間後。ライズ・オブ・ザ・レジスタンスとラジエーター・スプリングス・レーサーはシングルパスのみ(1日1回、両方買える)。早期入園は2026/1/5で終了
 
 ## 止めていること・残りの仕事
-- **東京対応(保留中)**:`parks.py` を各スクリプトに組み込む(タイムゾーン、日本の祝日、`--park` の選択肢にTDL/TDS、cronを `*/5 * * * *`、`plan_TDL.json`/`plan_TDS.json`、README)。ユーザーが再開を言うまで手を付けない
+- **東京(TDL・TDS)**:2026-11-27 に収集・点検・分析・ダッシュボードへ追加(ユーザーの依頼)。現地時刻は日本時間、祝日は日本、特殊な日の比較はクリスマス前だけ(感謝祭なし)。Actions の毎時の計算にも入っている。**残り**:`plan_TDL.json`/`plan_TDS.json`(東京のパスの仕組みは別なので、作るときにユーザーと決める)、`shows.csv` に東京のショー、`calendar_extra.csv` の東京の営業時間。**要観察**:11/27 22時台(閉園後のはず)に TDS で33件中18件が「営業中」と出ていた。DCA と同じ表示の残りなら、半分を超えるので `cleaning.py` の閉園判定では外れない。数日分の記録で確かめて対処を決める
 - **ダッシュボード公開済み(2026-11-24)**:https://disney-waits-dashboard.vercel.app (Vercelプロジェクト `disney-waits-dashboard`、パスワードは `DASHBOARD_PASSWORD`〈Secret、ユーザーだけが知る〉)。パスワードなし・誤りは401、noindex を確認済み。**データは自動更新**:Actionsが1時間おきに `export_dashboard.py --out summary` で `summary/<park>.json` をコミットし、本番は GitHub の raw を5分ごとに読み直す(`dashboard/app/lib/load.ts`、読めなければ置いたときの `dashboard/data/`)。画面やコードを変えたときだけ `cd dashboard && npx vercel --prod --yes`。`vercel link` がGitHub連携を勝手に付けたので `vercel git disconnect` で外した。リンクし直したら必ず外すこと(5分おきのデータコミットのたびにJSONなしで本番が上書きされる)
 - 12/26で分析が終わったら、Actionsの `collect-wait-times` を「Disable workflow」で止める
 - 任意の候補(未依頼):Queue-Timesへ過去データの問い合わせメール(英語)

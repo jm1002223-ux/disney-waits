@@ -22,8 +22,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import cleaning
+import parks
 
-TZ = ZoneInfo("America/Los_Angeles")
 SLOT = 15
 # 分析に使わない記録(現地0〜5時・閉園後)の決まりは cleaning.py
 BLOCKS = [(8, 10), (10, 12), (12, 14), (14, 16), (16, 18), (18, 20), (20, 22), (22, 24)]
@@ -41,6 +41,7 @@ def load(park):
     rides = json.load(open("rides.json", encoding="utf-8"))[park]
     by_qid = {str(v["queue_times_id"]): k for k, v in rides.items()}
     keep = cleaning.keeper(park)
+    TZ = parks.tz(park)   # パークの現地時刻
     W = defaultdict(lambda: defaultdict(dict))   # ride -> day -> slot -> 待ち(営業中のみ)
     O = defaultdict(lambda: defaultdict(dict))   # ride -> day -> slot -> 1/0(運営中か)
     seen = set()
@@ -272,7 +273,7 @@ def heat(p):
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--park", choices=["DL", "DCA"], required=True)
+    ap = argparse.ArgumentParser(); ap.add_argument("--park", choices=list(parks.CODES), required=True)
     ap.add_argument("--boot", type=int, default=50); ap.add_argument("--seed", type=int, default=1)
     a = ap.parse_args(); rnd = random.Random(a.seed)
     rides, W, O, days, hours = load(a.park)

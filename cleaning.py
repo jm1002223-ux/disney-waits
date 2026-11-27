@@ -12,9 +12,9 @@ data/ の記録はどちらも消さずに残す。年越しなど0時以降も�
 import csv, glob, json, os
 from collections import defaultdict
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
-TZ = ZoneInfo("America/Los_Angeles")
+import parks
+
 DAY_START = 5        # 現地のこの時刻より前は使わない
 CLOSE_SHARE = 0.5    # アトラクションのこの割合以上が営業していれば「パークが営業中」
 CLOSE_GRACE = 15     # 閉園とみなした時刻から、この分数までは使う
@@ -29,6 +29,7 @@ def attraction_ids(park):
 def close_cutoffs(park):
     """日付(現地, 'YYYY-MM-DD')→ その日の記録を使う最後の時刻(現地, タイムゾーン付き)"""
     ids = attraction_ids(park)
+    tz = parks.tz(park)
     snap = defaultdict(lambda: [0, 0])   # fetched_utc -> [営業中の数, 全体]
     for path in glob.glob(os.path.join("data", park, "*.csv")):
         with open(path, newline="", encoding="utf-8") as f:
@@ -39,7 +40,7 @@ def close_cutoffs(park):
     last_open = {}
     for t, (n, tot) in snap.items():
         if tot and n >= tot * CLOSE_SHARE:
-            ts = datetime.fromisoformat(t.replace("Z", "+00:00")).astimezone(TZ)
+            ts = datetime.fromisoformat(t.replace("Z", "+00:00")).astimezone(tz)
             if ts.hour < DAY_START:
                 continue
             d = ts.date().isoformat()

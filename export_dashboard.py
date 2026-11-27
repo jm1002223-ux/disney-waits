@@ -13,9 +13,11 @@ from zoneinfo import ZoneInfo
 
 import duckdb
 
+import parks
+
 DB = "warehouse/disney.duckdb"
 OUT = os.path.join("dashboard", "data")
-PARK_NAME = {"DL": "ディズニーランド・パーク", "DCA": "ディズニー・カリフォルニア・アドベンチャー"}
+PARK_NAME = {c: p["name"] for c, p in parks.PARKS.items()}
 WEEKDAY = {"Monday": "月", "Tuesday": "火", "Wednesday": "水", "Thursday": "木", "Friday": "金", "Saturday": "土", "Sunday": "日"}
 
 
@@ -136,6 +138,12 @@ def export(con, park):
 # ── 分析計画書(docs/分析計画書.md)に合わせた部分 ─────────────────
 # 特殊な日:含める場合と除く場合を比べる(計画書「データの前提と注意点」)
 SPECIAL = {"thanksgiving": ("感謝祭の週", "2026-11-26", "2026-11-29"), "christmas": ("クリスマス前", "2026-12-19", "2026-12-26")}
+# 東京には感謝祭がないので、クリスマス前だけ比べる
+SPECIAL_BY_COUNTRY = {"US": ("thanksgiving", "christmas"), "JP": ("christmas",)}
+
+
+def special_for(park):
+    return {k: SPECIAL[k] for k in SPECIAL_BY_COUNTRY[parks.PARKS[park]["country"]]}
 
 
 def read_json(path):
@@ -163,7 +171,7 @@ def stamp(path):
 
 
 def crowd_index_variants(park):
-    """Q2 混雑指数。model.py と同じ計算(同じ関数)で、特殊な日を基準に含める/除くの4通り"""
+    """Q2 混雑指数。model.py と同じ計算(同じ関数)で、特殊な日を基準に含める/除くの4通り(東京は感謝祭がないので2通り)"""
     import model as M
     try:
         rides, W = M.load_w(park)
@@ -172,9 +180,14 @@ def crowd_index_variants(park):
     days = sorted({d for r in W.values() for d in r})
     core = [k for k in W if rides[k]["fallback_peak"] >= 40]
     span = lambda a, b: {d for d in days if a <= d <= b}
-    tg, xm = span(*SPECIAL["thanksgiving"][1:]), span(*SPECIAL["christmas"][1:])
+    sp = special_for(park)
+    xm = span(*sp["christmas"][1:])
+    variants = {"all": set(), "ex_christmas": xm}
+    if "thanksgiving" in sp:
+        tg = span(*sp["thanksgiving"][1:])
+        variants.update({"ex_thanksgiving": tg, "ex_both": tg | xm})
     out = {}
-    for key, excl in {"all": set(), "ex_thanksgiving": tg, "ex_christmas": xm, "ex_both": tg | xm}.items():
+    for key, excl in variants.items():
         use = [d for d in days if d not in excl]
         if not use:
             continue
@@ -275,7 +288,7 @@ def analysis(con, park, base):
 
     return {
         "data_days": days_n,
-        "special": {k: {"label": v[0], "from": v[1], "to": v[2]} for k, v in SPECIAL.items()},
+        "special": {k: {"label": v[0], "from": v[1], "to": v[2]} for k, v in special_for(park).items()},
         "crowd_index": crowd_index_variants(park),
         "q3": q3, "q4": q4,
         "q5": ins and {"k": ins["k"], "silhouette": ins["silhouette"], "ari": ins["ari"], "k_scores": ins["k_scores"], "groups": ins["groups"]},
@@ -294,7 +307,7 @@ def main():
     con = duckdb.connect(DB, read_only=True)
     out = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else OUT
     os.makedirs(out, exist_ok=True)
-    for park in ("DL", "DCA"):
+    for park in parks.CODES:
         data = export(con, park)
         if data is None:
             print(f"[{park}] データなし、スキップ"); continue

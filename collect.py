@@ -1,12 +1,11 @@
-"""Queue-Times.com から待ち時間を取得して data/<park>/<現地日付>.csv に追記する。
+"""Queue-Times.com から待ち時間を取得して data/<park>/<現地日付>.csv に追記する(パークは parks.py の4つ)。
 Powered by Queue-Times.com (https://queue-times.com/)
 標準ライブラリだけで動く。"""
 import csv, json, os, sys, urllib.request
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+import parks
 
-PARKS = {"DL": 16, "DCA": 17}  # Disneyland Park / Disney California Adventure
-TZ = ZoneInfo("America/Los_Angeles")
+PARKS = {code: p["id"] for code, p in parks.PARKS.items()}  # ID・タイムゾーンは parks.py
 URL = "https://queue-times.com/parks/{}/queue_times.json"
 FIELDS = ["fetched_utc", "ride_id", "ride_name", "land", "is_open", "wait_time", "last_updated"]
 
@@ -56,7 +55,6 @@ def rows(data, now):
 
 def main():
     now = datetime.now(timezone.utc)
-    local_day = now.astimezone(TZ).strftime("%Y-%m-%d")
     failed = 0
     attr = attraction_ids()
     for code, pid in PARKS.items():
@@ -72,6 +70,7 @@ def main():
         ignored = [r["ride_name"] for r in rs if r["is_open"] and str(r["ride_id"]) not in ids]
         note = f"(判定外で営業中: {', '.join(ignored)})" if ignored else ""
         print(f"[{code}] アトラクション営業中 {n_open}/{len(judged)} {note}")
+        local_day = now.astimezone(parks.tz(code)).strftime("%Y-%m-%d")   # パークの現地の日付
         path = os.path.join("data", code, f"{local_day}.csv")
         prev = last_snapshot(path)
         if n_open == 0:

@@ -40,7 +40,7 @@ export function Dashboard({ parks }: { parks: ParkData[] }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">{d.park_name}</h1>
-          <p className="text-xs text-zinc-500 mt-1">分析計画書(11/24〜12/26)の成果物の順に表示。時刻は現地(太平洋時間)。いま{d.data_days}日分</p>
+          <p className="text-xs text-zinc-500 mt-1">分析計画書(11/24〜12/26)の成果物の順に表示。時刻は現地({d.park === 'TDL' || d.park === 'TDS' ? '日本時間' : '太平洋時間'})。いま{d.data_days}日分</p>
         </div>
         <Segmented value={parkId} options={parks.map(p => [p.park, p.park] as [string, string])} onChange={setParkId} />
       </div>

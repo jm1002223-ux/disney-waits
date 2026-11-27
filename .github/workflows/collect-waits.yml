@@ -50,7 +50,7 @@ jobs:
             # 1) ダッシュボード用の集計(公開中のダッシュボードが5分ごとに読みにくる)
             #    先に予測・分類(Q3〜Q7)を計算する。日数が足りない間は各スクリプトが止まるだけで、集計は続ける
             #    出力(models/・insights/)はこの実行の中だけで使い、コミットしない
-            for p in DL DCA; do
+            for p in DL DCA TDL TDS; do   # 東京(TDL・TDS)は 2026-11-27 から
               timeout 300 python model.py --park "$p" > /dev/null 2>&1 || true
               timeout 300 python model.py --park "$p" --backtest > /dev/null 2>&1 || true
               timeout 600 python insights.py --park "$p" > /dev/null 2>&1 || true

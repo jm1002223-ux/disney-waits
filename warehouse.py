@@ -27,24 +27,11 @@ from datetime import date, timedelta
 import duckdb
 
 import cleaning
+import parks
+from parks import us_holidays  # plan.py が使う(定義は parks.py)
 
 DB = "warehouse/disney.duckdb"
 PQ = "warehouse/parquet/waits"
-
-
-def us_holidays(years):
-    """アメリカの祝日(連邦祝日+パークが混む日)"""
-    out = {}
-    def nth(y, m, wd, n):
-        d = date(y, m, 1); d += timedelta((wd - d.weekday()) % 7); return d + timedelta(7 * (n - 1))
-    def last(y, m, wd):
-        d = date(y, m + 1, 1) - timedelta(1) if m < 12 else date(y, 12, 31); return d - timedelta((d.weekday() - wd) % 7)
-    for y in years:
-        out.update({date(y, 1, 1): "元日", nth(y, 1, 0, 3): "キング牧師記念日", nth(y, 2, 0, 3): "大統領の日", last(y, 5, 0): "メモリアルデー",
-                    date(y, 6, 19): "ジューンティーンス", date(y, 7, 4): "独立記念日", nth(y, 9, 0, 1): "レイバーデー", nth(y, 10, 0, 2): "コロンブスデー",
-                    date(y, 11, 11): "退役軍人の日", nth(y, 11, 3, 4): "感謝祭", nth(y, 11, 3, 4) + timedelta(1): "感謝祭の翌日",
-                    date(y, 12, 24): "クリスマス・イブ", date(y, 12, 25): "クリスマス", date(y, 12, 31): "大晦日"})
-    return out
 
 
 def main():
@@ -55,6 +42,7 @@ def main():
     con = duckdb.connect(DB)
     con.execute("SET TimeZone='UTC'")
 
+    TZ_CASE = "CASE park " + " ".join(f"WHEN '{c}' THEN '{p['tz']}'" for c, p in parks.PARKS.items()) + " END"
     # 1) CSV → Parquet(パーク・月ごとに分割)
     con.execute(f"""
     CREATE OR REPLACE TEMP TABLE raw AS
@@ -67,7 +55,7 @@ def main():
     """)
     con.execute(f"""
     CREATE OR REPLACE TEMP TABLE clean AS
-    SELECT *, timezone('America/Los_Angeles', fetched_utc) AS ts_local
+    SELECT *, timezone({TZ_CASE}, fetched_utc) AS ts_local   -- パークの現地時刻(parks.py)
     FROM raw
     QUALIFY row_number() OVER (PARTITION BY park, ride_id, coalesce(last_updated, fetched_utc) ORDER BY fetched_utc) = 1
     """)
@@ -110,10 +98,12 @@ def main():
     """)
 
     # 4) dim_calendar(営業時間の推定・混雑指数・祝日・追加情報)
-    days = [r[0] for r in con.execute("SELECT DISTINCT date_local FROM fact_waits").fetchall()]
-    hol = us_holidays(sorted({d.year for d in days} | {d.year + 1 for d in days}))
-    con.execute("CREATE OR REPLACE TEMP TABLE hol(date_local DATE, holiday VARCHAR)")
-    con.executemany("INSERT INTO hol VALUES (?,?)", list(hol.items()))
+    days = con.execute("SELECT DISTINCT park, date_local FROM fact_waits").fetchall()
+    years = sorted({d.year for _, d in days} | {d.year + 1 for _, d in days})
+    con.execute("CREATE OR REPLACE TEMP TABLE hol(park VARCHAR, date_local DATE, holiday VARCHAR)")
+    hol = [(p, d, n) for p in sorted({p for p, _ in days}) if p in parks.PARKS for d, n in parks.holidays(p, years).items()]   # アメリカ/日本の祝日
+    if hol:
+        con.executemany("INSERT INTO hol VALUES (?,?,?)", hol)
     extra = "SELECT * FROM read_csv('calendar_extra.csv', header=true, all_varchar=true)" if os.path.exists("calendar_extra.csv") else \
             "SELECT NULL::VARCHAR date, NULL::VARCHAR park, NULL::VARCHAR event, NULL::VARCHAR hours_open, NULL::VARCHAR hours_close, NULL::VARCHAR weather, NULL::VARCHAR note WHERE false"
     con.execute(f"""
@@ -140,7 +130,7 @@ def main():
            ex.event, ex.hours_open, ex.hours_close, ex.weather, ex.note
     FROM hours h
     LEFT JOIN ci USING (park, date_local)
-    LEFT JOIN hol USING (date_local)
+    LEFT JOIN hol USING (park, date_local)
     LEFT JOIN ex ON CAST(ex.date AS DATE) = h.date_local AND (ex.park IS NULL OR ex.park = h.park)
     """)
 

@@ -27,14 +27,15 @@ from datetime import datetime, date
 from zoneinfo import ZoneInfo
 
 import cleaning
+import parks
 
-TZ = ZoneInfo("America/Los_Angeles")
 SLOT = 15
 # 分析に使わない記録(現地0〜5時・閉園後)の決まりは cleaning.py
 
 
 def load(park):
     keep = cleaning.keeper(park)
+    TZ = parks.tz(park)   # パークの現地時刻
     seen = set()
     obs = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))  # ride -> day -> slot -> [wait]
     for path in sorted(glob.glob(os.path.join("data", park, "*.csv"))):
@@ -290,7 +291,7 @@ c2.addEventListener('pointerleave',()=>{tip.style.display='none';xh.style.displa
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--park", choices=["DL", "DCA"], required=True)
+    ap = argparse.ArgumentParser(); ap.add_argument("--park", choices=list(parks.CODES), required=True)
     ap.add_argument("--backtest", action="store_true", help="予測の精度を検証する")
     a = ap.parse_args()
     if a.backtest:

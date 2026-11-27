@@ -9,7 +9,8 @@ Powered by [Queue-Times.com](https://queue-times.com/)(待ち時間データの�
 | ファイル | 役割 |
 |---|---|
 | `.github/workflows/collect-waits.yml` | 5分おき(終日。1回の実行が約6時間動き、次の回を自分で予約する。閉園中は保存しない)に `collect.py` を動かし、データをコミットする |
-| `collect.py` | 待ち時間を取得して `data/DL/日付.csv`・`data/DCA/日付.csv` に追記(現地時間で日付を分ける) |
+| `collect.py` | 待ち時間を取得して `data/<パーク>/日付.csv` に追記(パークの現地時間で日付を分ける)。パークはカリフォルニアの DL・DCA と東京の TDL・TDS(2026-11-27〜) |
+| `parks.py` | パークの共通設定(Queue-TimesのID・タイムゾーン・国)と、アメリカ・日本の祝日 |
 | `analyze.py` | 貯めたデータから、アトラクションごと・15分ごとの待ち時間(中央値)を集計 |
 | `model.py` | 混雑指数を計算し、指数ごとの待ち時間と列の人数(推定)を出す。グラフ付きレポートも作る |
 | `insights.py` | アトラクションのグループ分け、朝いちばんに乗る価値のランキング、システム調整の確率と時間帯 |
@@ -126,7 +127,7 @@ jupyter lab analysis.ipynb                 # ブラウザで分析ノートが�
 | `v_downtime_events` | 営業中に止まった区間(開始・再開・時間帯) |
 | `v_queue_people` | 列の人数の推定とゲスト占有率 |
 
-`analysis.ipynb` には、混雑指数の推移、アトラクション×時間帯のヒートマップ、平日と週末の比較、混雑指数への反応、ショー中に空くアトラクション、シス調、ゲスト占有率、一緒に混むアトラクション(相関)、朝いちばんの価値、の9つの分析と、自由にSQLを書くセルが入っています。どのセルもSQLを書き換えれば切り口を変えられます(先頭の `PARK = "DL"` を `"DCA"` にすればカリフォルニア・アドベンチャー)。
+`analysis.ipynb` には、混雑指数の推移、アトラクション×時間帯のヒートマップ、平日と週末の比較、混雑指数への反応、ショー中に空くアトラクション、シス調、ゲスト占有率、一緒に混むアトラクション(相関)、朝いちばんの価値、の9つの分析と、自由にSQLを書くセルが入っています。どのセルもSQLを書き換えれば切り口を変えられます(先頭の `PARK = "DL"` を `"DCA"` にすればカリフォルニア・アドベンチャー、`"TDL"`・`"TDS"` なら東京)。
 
 - `calendar_extra.csv` に、日付ごとのイベント・天気・公式の営業時間を書き足していくと、「雨の日だけ」「イベントの日だけ」のような分析ができます
 - `shows.csv` は、当日のアプリで見たショーの時刻に合わせて直すと、ショー中の分析が正確になります
@@ -205,7 +206,7 @@ python gbm.py --park DL                    # 1〜数分(--fast で軽く)
 
 ```bash
 python warehouse.py
-python export_dashboard.py        # → dashboard/data/DL.json, DCA.json
+python export_dashboard.py        # → dashboard/data/DL.json, DCA.json, TDL.json, TDS.json
 cd dashboard
 npm install                        # 初回だけ
 npm run dev                        # → http://localhost:3000

@@ -7,7 +7,7 @@ import type { ParkData } from '../lib/types'
 export const revalidate = 300 // 5分ごとに集計を読み直す
 
 export default async function LabPage() {
-  const parks = (await Promise.all(['DL', 'DCA'].map(loadPark))).filter((p): p is ParkData => p !== null)
+  const parks = (await Promise.all(['DL', 'DCA', 'TDL', 'TDS'].map(loadPark))).filter((p): p is ParkData => p !== null)
   const updatedAt = parks.map(p => p.generated_at).sort().at(-1)
   return (
     <AppShell updatedAt={updatedAt}>

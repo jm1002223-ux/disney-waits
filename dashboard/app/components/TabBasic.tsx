@@ -93,13 +93,14 @@ export function CrowdIndex({ d, variants }: { d: ParkData; variants: Variant[] }
     all: '全期間を基準', ex_thanksgiving: `${d.special.thanksgiving?.label}を除いて基準`, ex_christmas: `${d.special.christmas?.label}を除いて基準`, ex_both: '両方を除いて基準',
   }
   if (!ci) return <p className="text-xs text-zinc-500">混雑指数がまだありません。</p>
+  const shown = variants.filter(k => d.crowd_index?.[k])   // 東京は感謝祭がないので、ない比べ方は出さない
   const data = d.days.filter(x => ci[x.date] != null).map(x => {
     const sp = Object.values(d.special).find(s => x.date >= s.from && x.date <= s.to)
     return { label: `${md(x.date)}${x.weekday}`, ci: ci[x.date], holiday: x.holiday, sp: sp?.label, open: x.open, close: x.close }
   })
   return (
     <div className="space-y-3">
-      <Segmented value={v} options={variants.map(k => [k, label[k]] as [Variant, string])} onChange={setV} />
+      {shown.length > 1 && <Segmented value={v} options={shown.map(k => [k, label[k]] as [Variant, string])} onChange={setV} />}
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />

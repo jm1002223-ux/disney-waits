@@ -2,16 +2,16 @@
 
   python monitor.py   # 問題がなければ何も出さず終了コード0。問題があれば内容を出して終了コード1
 
-点検すること(現地の 9:00〜21:00 だけ。両パークとも確実に営業している時間帯)
+点検すること(パークごとに確実に営業している現地の時間帯だけ。parks.py の check_hours:アメリカ 9〜21時、東京 10〜20時)
   1. 今日のCSVがあり、最後の記録が30分以内か(収集が止まっていないか)
   2. 最後の記録で、rides.json のアトラクションが1つ以上営業中か(閉園判定の誤りや、Queue-Times側の異常)
 """
 import csv, json, os, sys
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
 
-TZ = ZoneInfo("America/Los_Angeles")
-PARKS = ("DL", "DCA")
+import parks
+
+PARKS = parks.CODES
 STALE_MIN = 30
 
 
@@ -23,11 +23,13 @@ def attraction_ids(park):
 
 def check(now=None):
     now = now or datetime.now(timezone.utc)
-    local = now.astimezone(TZ)
-    if not (9 <= local.hour < 21):
-        return []
     problems = []
     for park in PARKS:
+        tz = parks.tz(park)
+        local = now.astimezone(tz)
+        start, end = parks.PARKS[park]["check_hours"]
+        if not (start <= local.hour < end):
+            continue
         path = os.path.join("data", park, f"{local:%Y-%m-%d}.csv")
         if not os.path.exists(path):
             problems.append(f"{park}: 今日({local:%m/%d})の記録がありません")
@@ -40,7 +42,7 @@ def check(now=None):
         last_t = rows[-1]["fetched_utc"]
         age = (now - datetime.strptime(last_t, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)).total_seconds() / 60
         if age > STALE_MIN:
-            problems.append(f"{park}: 最後の記録が{age:.0f}分前です(現地 {datetime.fromisoformat(last_t.replace('Z', '+00:00')).astimezone(TZ):%H:%M})")
+            problems.append(f"{park}: 最後の記録が{age:.0f}分前です(現地 {datetime.fromisoformat(last_t.replace('Z', '+00:00')).astimezone(tz):%H:%M})")
         ids = attraction_ids(park)
         last = [r for r in rows if r["fetched_utc"] == last_t and r["ride_id"] in ids]
         if last and not any(r["is_open"] == "1" for r in last):

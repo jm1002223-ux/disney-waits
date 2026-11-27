@@ -80,7 +80,7 @@ export type ParkData = {
   // 分析計画書に合わせた部分
   data_days: number
   special: Record<string, { label: string; from: string; to: string }>
-  crowd_index: Record<'all' | 'ex_thanksgiving' | 'ex_christmas' | 'ex_both', Record<string, number>> | null
+  crowd_index: Partial<Record<'all' | 'ex_thanksgiving' | 'ex_christmas' | 'ex_both', Record<string, number>>> | null
   q3: {
     rides: Record<string, { name: string; a: number; b: number; r2: number; days: number; shape: [number, number][] }>
     gbm_importance: { name: string; value: number }[]

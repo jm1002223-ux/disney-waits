@@ -99,7 +99,7 @@ def pred_B(tr, te):
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--park", choices=["DL", "DCA"], required=True)
+    ap = argparse.ArgumentParser(); ap.add_argument("--park", choices=list(__import__("parks").CODES), required=True)
     ap.add_argument("--fast", action="store_true"); a = ap.parse_args()
     df = load(a.park)
     days = df.date_local.nunique()
