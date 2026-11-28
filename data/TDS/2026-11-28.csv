@@ -4322,3 +4322,36 @@ fetched_utc,ride_id,ride_name,land,is_open,wait_time,last_updated
 2026-11-28T10:53:28Z,8028,Journey to the Center of the Earth,Mysterious Island,1,0,2026-11-28T10:51:19.000Z
 2026-11-28T10:53:28Z,8035,DisneySea Electric Railway (Port Discovery),Port Discovery,1,20,2026-11-28T10:51:19.000Z
 2026-11-28T10:53:28Z,8051,Nemo & Friends SeaRider,Port Discovery,1,15,2026-11-28T10:51:19.000Z
+2026-11-28T10:58:28Z,8037,Big City Vehicles,American Waterfront,0,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8036,DisneySea Electric Railway (American Waterfront),American Waterfront,1,25,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8032,DisneySea Transit Steamer Line (American Waterfront),American Waterfront,0,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8047,Tower of Terror,American Waterfront,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8023,Toy Story Mania!,American Waterfront,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8050,Turtle Talk,American Waterfront,1,30,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8040,Caravan Carousel,Arabian Coast,1,5,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8025,Jasmine's Flying Carpets,Arabian Coast,1,25,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8039,Sindbad's Storybook Voyage,Arabian Coast,1,5,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8030,The Magic Lamp Theater,Arabian Coast,1,15,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,13559,Anna and Elsa's Frozen Journey,Fantasy Springs,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,13562,Fairy Tinker Bell's Busy Buggies,Fantasy Springs,1,40,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,13561,Peter Pan's Never Land Adventure,Fantasy Springs,1,60,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,13560,Rapunzel's Lantern Festival,Fantasy Springs,1,60,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8033,DisneySea Transit Steamer Line (Lost River Delta),Lost River Delta,0,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8027,Indiana Jones Adventure®: Temple of the Crystal Skull,Lost River Delta,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8046,Raging Spirits,Lost River Delta,1,60,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8031,DisneySea Transit Steamer Line (Mediterranean Harbor),Mediterranean Harbor,0,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8048,Fortress Explorations,Mediterranean Harbor,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8024,Soaring: Fantastic Flight,Mediterranean Harbor,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8049,The Leonardo Challenge,Mediterranean Harbor,0,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8034,Venetian Gondolas,Mediterranean Harbor,0,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8022,Ariel's Playground,Mermaid Lagoon,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8044,Blowfish Balloon Race,Mermaid Lagoon,1,20,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8041,Flounder's Flying Fish Coaster,Mermaid Lagoon,1,30,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8043,Jumpin' Jellyfish,Mermaid Lagoon,1,10,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8026,Mermaid Lagoon Theater,Mermaid Lagoon,0,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8042,Scuttle's Scooters,Mermaid Lagoon,1,20,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8045,The Whirlpool,Mermaid Lagoon,1,15,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8029,"20,000 Leagues Under the Sea",Mysterious Island,1,25,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8028,Journey to the Center of the Earth,Mysterious Island,1,0,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8035,DisneySea Electric Railway (Port Discovery),Port Discovery,1,20,2026-11-28T10:56:08.000Z
+2026-11-28T10:58:28Z,8051,Nemo & Friends SeaRider,Port Discovery,1,15,2026-11-28T10:56:08.000Z
