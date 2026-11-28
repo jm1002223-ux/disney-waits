@@ -4624,3 +4624,40 @@ fetched_utc,ride_id,ride_name,land,is_open,wait_time,last_updated
 2026-11-28T10:28:28Z,7991,Westernland Shootin' Gallery,Westernland,1,20,2026-11-28T10:26:05.000Z
 2026-11-28T10:28:28Z,7985,Omnibus,World Bazaar,0,0,2026-11-28T10:26:05.000Z
 2026-11-28T10:28:28Z,8019,Penny Arcade,World Bazaar,1,0,2026-11-28T10:26:05.000Z
+2026-11-28T10:33:28Z,7987,Jungle Cruise: Wildlife Expeditions,Adventureland,1,40,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7986,Pirates of the Caribbean,Adventureland,1,15,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7989,Swiss Family Treehouse,Adventureland,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7990,The Enchanted Tiki Room: Stitch Presents “Aloha E Komo Mai!”,Adventureland,1,10,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7988,Western River Railroad,Adventureland,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7997,Beaver Brothers Explorer Canoes,Critter Country,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7996,Splash Mountain,Critter Country,1,60,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8006,“it's a small world”,Fantasyland,1,15,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8007,Alice's Tea Party,Fantasyland,1,15,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8004,Castle Carrousel,Fantasyland,1,30,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8000,Cinderella's Fairy Tale Hall,Fantasyland,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8003,Dumbo The Flying Elephant,Fantasyland,1,40,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8255,Enchanted Tale of Beauty and the Beast,Fantasyland,1,100,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8005,Haunted Mansion “Holiday Nightmare”,Fantasyland,1,70,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8001,Mickey's PhilharMagic,Fantasyland,1,20,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7998,Peter Pan's Flight,Fantasyland,1,50,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8002,Pinocchio's Daring Journey,Fantasyland,1,20,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8008,Pooh's Hunny Hunt,Fantasyland,1,70,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7999,Snow White's Adventures,Fantasyland,1,20,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8018,"Monsters, Inc. Ride & Go Seek!",Tomorrowland,1,70,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8015,Star Tours: The Adventures Continue,Tomorrowland,1,20,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8021,Stitch Encounter,Tomorrowland,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8254,The Happy Ride with Baymax,Tomorrowland,1,100,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8011,Chip 'n Dale's Treehouse,Toontown,1,5,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8013,Donald's Boat,Toontown,1,5,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8012,Gadget's Go Coaster,Toontown,1,30,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8014,Goofy's Paint 'n' Play House,Toontown,1,10,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8010,Minnie's House,Toontown,1,15,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8009,Roger Rabbit's Car Toon Spin,Toontown,1,30,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8020,Toon Park,Toontown,1,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7994,Big Thunder Mountain,Westernland,1,80,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7992,Country Bear Theater,Westernland,1,20,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7993,Mark Twain Riverboat,Westernland,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7995,Tom Sawyer Island Rafts,Westernland,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7991,Westernland Shootin' Gallery,Westernland,1,20,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,7985,Omnibus,World Bazaar,0,0,2026-11-28T10:31:14.000Z
+2026-11-28T10:33:28Z,8019,Penny Arcade,World Bazaar,1,0,2026-11-28T10:31:14.000Z
